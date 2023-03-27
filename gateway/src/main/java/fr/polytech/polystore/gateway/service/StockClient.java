@@ -1,35 +1,29 @@
 package fr.polytech.polystore.gateway.service;
 
-import com.netflix.discovery.EurekaClient;
 import fr.polytech.polystore.gateway.dtos.CreateProductAggregateDTO;
-import fr.polytech.polystore.gateway.dtos.ProductDTO;
 import fr.polytech.polystore.gateway.dtos.StockDTO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
+
 import java.util.List;
 
 @Service
-@EnableDiscoveryClient
 public class StockClient {
+    @Value("${inventory.service.baseurl}")
+    private String inventoryServiceBaseUrl;
 
-    private WebClient client;
+    private final WebClient client;
 
-    @Autowired
-    private EurekaClient discoveryClient;
 
     public StockClient(WebClient.Builder builder) {
-        this.client = builder.baseUrl("").build();
+        this.client = builder.baseUrl(this.inventoryServiceBaseUrl).build();
     }
 
     public Mono<StockDTO> getStock(String productId){
-        String url = discoveryClient.getNextServerFromEureka("inventory-service", false).getHomePageUrl();
-        this.client = this.client.mutate().baseUrl(url).build();
         return this.client
                 .get()
                 .uri("/api/v1/inventory/{productId}", productId)
@@ -39,8 +33,6 @@ public class StockClient {
     }
 
     public Mono<List<StockDTO>> getStocks() {
-        String url = discoveryClient.getNextServerFromEureka("inventory-service", false).getHomePageUrl();
-        this.client = this.client.mutate().baseUrl(url).build();
         return this.client
                 .get()
                 .uri("/api/v1/inventory")
@@ -50,8 +42,6 @@ public class StockClient {
     }
 
     public Mono<StockDTO> createStock(StockDTO product) {
-        String url = discoveryClient.getNextServerFromEureka("inventory-service", false).getHomePageUrl();
-        this.client = this.client.mutate().baseUrl(url).build();
         return this.client
                 .post()
                 .uri("/api/v1/inventory")

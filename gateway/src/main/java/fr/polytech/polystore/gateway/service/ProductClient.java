@@ -1,10 +1,9 @@
 package fr.polytech.polystore.gateway.service;
 
-import com.netflix.discovery.EurekaClient;
 import fr.polytech.polystore.gateway.dtos.CreateProductAggregateDTO;
 import fr.polytech.polystore.gateway.dtos.ProductDTO;
-import fr.polytech.polystore.gateway.dtos.StockDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -15,21 +14,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@EnableDiscoveryClient
 public class ProductClient {
+
+    @Value("${catalog.service.baseurl}")
+    private String productsServiceBaseUrl;
 
     private WebClient client;
 
-    @Autowired
-    private EurekaClient discoveryClient;
-
     public ProductClient(WebClient.Builder builder) {
-        this.client = builder.baseUrl("").build();
+        this.client = builder.baseUrl(this.productsServiceBaseUrl).build();
     }
 
     public Mono<ProductDTO> getProduct(String productId) {
-        String url = discoveryClient.getNextServerFromEureka("products-service", false).getHomePageUrl();
-        this.client = this.client.mutate().baseUrl(url).build();
         return this.client
                 .get()
                 .uri("/api/v1/products/{productId}", productId)
@@ -39,8 +35,6 @@ public class ProductClient {
     }
 
     public Mono<List<ProductDTO>> getProducts() {
-        String url = discoveryClient.getNextServerFromEureka("products-service", false).getHomePageUrl();
-        this.client = this.client.mutate().baseUrl(url).build();
         List<ProductDTO> test = new ArrayList<>();
         return this.client
                 .get()
@@ -51,8 +45,6 @@ public class ProductClient {
     }
 
     public Mono<ProductDTO> createProduct(CreateProductAggregateDTO product) {
-        String url = discoveryClient.getNextServerFromEureka("products-service", false).getHomePageUrl();
-        this.client = this.client.mutate().baseUrl(url).build();
         return this.client
                 .post()
                 .uri("/api/v1/products")
