@@ -1,0 +1,33 @@
+mongo:
+  image: mongo:4.0.4
+  volumes:
+    - ./data/db/mongo
+  ports:
+    - "27017:27017"
+
+redis:
+  image: redis
+  volumes:
+    - ./data/db/redis
+  ports:
+    - "6379:6379"
+
+postgres:
+  image: postgres
+  ports:
+    - "5432:5432"
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: polystore
+    PGDATA: ./data/db/postgres
+
+postgres-inventory:
+  image: postgres
+  ports:
+    - "5433:5432"
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: polystore
+    PGDATA: ./data/db/postgres
