@@ -1,41 +1,64 @@
 package fr.polytech.polystore.inventory.controllers;
 
+import fr.polytech.polystore.inventory.controllers.InventoryServiceGrpc.InventoryServiceImplBase;
 import fr.polytech.polystore.inventory.dtos.StockDTO;
 import fr.polytech.polystore.inventory.service.InventoryService;
+import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/api/v1/inventory")
-public class InventoryController {
+@GrpcService
+public class InventoryController extends InventoryServiceImplBase {
 
     @Autowired
     private InventoryService inventoryService;
 
-    @PostMapping()
-    public ResponseEntity<StockDTO> createStock(@RequestBody StockDTO stockDTO) {
-        StockDTO order = inventoryService.createStock(stockDTO);
-        return new ResponseEntity<StockDTO>(order, HttpStatus.CREATED);
+    @Override
+    public void createStock(StockGRPC request, StreamObserver<StockGRPC> responseObserver) {
+        StockDTO stockDTO = convertFromProtoStock(request);
+        StockDTO createdStockDTO = inventoryService.createStock(stockDTO);
+
+        StockGRPC createdStock = convertToProtoStock(createdStockDTO);
+        responseObserver.onNext(createdStock);
+        responseObserver.onCompleted();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<StockDTO> getOrder(@RequestParam String id) {
-        StockDTO order = this.inventoryService.getOrder(id);
-        return new ResponseEntity<>(order, HttpStatus.OK);
+    @Override
+    public void getStock(GetStockRequestGRPC request, StreamObserver<StockGRPC> responseObserver) {
+        String id = request.getId();
+        StockDTO stockDTO = inventoryService.getStock(id);
+
+        StockGRPC stock = convertToProtoStock(stockDTO);
+        responseObserver.onNext(stock);
+        responseObserver.onCompleted();
     }
 
-    @GetMapping()
-    public ResponseEntity<List<StockDTO>> getAllOrders() {
-        List<StockDTO> orders = this.inventoryService.getAllOrders();
-        return new ResponseEntity<>(orders, HttpStatus.OK);
+    @Override
+    public void getAllStocks(GetAllStocksRequestGRPC request, StreamObserver<GetAllStocksResponseGRPC> responseObserver) {
+        List<StockDTO> stockDTOList = inventoryService.getAllStocks();
+        List<StockGRPC> stocks = stockDTOList.stream().map(this::convertToProtoStock).collect(Collectors.toList());
+
+        GetAllStocksResponseGRPC response = GetAllStocksResponseGRPC.newBuilder().addAllStocks(stocks).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    private StockDTO convertFromProtoStock(StockGRPC protoStock) {
+        StockDTO stockDTO = new StockDTO();
+        stockDTO.setId(protoStock.getId());
+        stockDTO.setPrice(protoStock.getPrice());
+        stockDTO.setQuantity(protoStock.getQuantity());
+        return stockDTO;
+    }
+
+    private StockGRPC convertToProtoStock(StockDTO stockDTO) {
+        return StockGRPC.newBuilder()
+                .setId(stockDTO.getId())
+                .setPrice(stockDTO.getPrice())
+                .setQuantity(stockDTO.getQuantity())
+                .build();
     }
 }
