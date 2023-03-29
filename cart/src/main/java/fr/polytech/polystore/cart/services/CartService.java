@@ -1,27 +1,31 @@
 package fr.polytech.polystore.cart.services;
 
 
-import com.netflix.appinfo.InstanceInfo;
-import com.netflix.discovery.EurekaClient;
-import fr.polytech.polystore.cart.dtos.CartsDTO;
-import fr.polytech.polystore.cart.dtos.CatalogProductDTO;
-import fr.polytech.polystore.cart.dtos.OrderOrderDTO;
-import fr.polytech.polystore.cart.dtos.ProductDTO;
+import fr.polytech.polystore.cart.dtos.CartDTO;
 import fr.polytech.polystore.cart.entities.Cart;
 import fr.polytech.polystore.cart.repositories.CartRepository;
+import fr.polytech.polystore.common.PolystoreException;
+import fr.polytech.polystore.common.dtos.CartProductDTO;
+import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.common.grpc.CatalogServiceGrpc;
+import fr.polytech.polystore.common.grpc.GetProductRequestGRPC;
+import fr.polytech.polystore.common.grpc.ProductGRPC;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 
 @Service
-@EnableDiscoveryClient
 public class CartService {
+    @GrpcClient("catalog_service")
+    private CatalogServiceGrpc.CatalogServiceBlockingStub blockingStub;
+
     @Autowired
     CartRepository cartRepository;
 
@@ -30,26 +34,23 @@ public class CartService {
         return builder.build();
     }
 
-    @Autowired
-    private EurekaClient discoveryClient;
-
-    public CartsDTO getCart() {
+    public CartDTO getCart() {
         Cart cart = this.cartRepository.findById("1").orElse(null);
 
         if (cart == null) {
             return null;
         }
-        return new CartsDTO(cart);
+        return this.CartToCartDTO(cart);
     }
 
-    public ProductDTO addProduct(ProductDTO createProductDTO) {
-        InstanceInfo instanceInfo = discoveryClient.getNextServerFromEureka("products-service", false);
-        String url = instanceInfo.getHomePageUrl() + "api/v1/products/" + createProductDTO.getProductId();
-        RestTemplate restTemplate = new RestTemplate();
-        CatalogProductDTO productDTO = restTemplate.getForObject(url, CatalogProductDTO.class);
-
-        if (productDTO == null) {
-            return null;
+    public void addProduct(CartProductDTO createProductDTO) throws PolystoreException.NotFound {
+        ProductGRPC productGRPC = null;
+        try {
+            productGRPC = this.blockingStub.getProduct(GetProductRequestGRPC.newBuilder().setId(createProductDTO.getId()).build());
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode().equals(Status.NOT_FOUND.getCode())) {
+                throw new PolystoreException.NotFound("Product not found");
+            }
         }
 
         Cart cart = this.cartRepository.findById("1").orElse(null);
@@ -64,7 +65,7 @@ public class CartService {
         cart.getProducts()
                 .stream()
                 .findFirst()
-                .filter(product -> product.getProductId().equals(createProductDTO.getProductId()))
+                .filter(product -> product.getId().equals(createProductDTO.getId()))
                 .ifPresentOrElse(product -> {
                     int finalQuantity = product.getQuantity() + createProductDTO.getQuantity();
                     if (finalQuantity > 0 ) {
@@ -72,32 +73,37 @@ public class CartService {
                     } else {
                         finalCart.getProducts().remove(product);
                     }
-                }, () -> finalCart.getProducts().add(new ProductDTO(createProductDTO.getProductId(), createProductDTO.getQuantity())));
+                }, () -> finalCart.getProducts().add(new CartProductDTO(createProductDTO.getId(), createProductDTO.getQuantity())));
 
         this.cartRepository.save(cart);
-        return createProductDTO;
     }
 
-    public OrderOrderDTO order() {
+    public OrderDTO order() {
         Cart cart = this.cartRepository.findById("1").orElse(null);
 
         if (cart == null) {
             return null;
         }
 
-        OrderOrderDTO order = new OrderOrderDTO(cart);
+        OrderDTO order = this.CartToOrderDTO(cart);
 
-        InstanceInfo instanceInfo = discoveryClient.getNextServerFromEureka("order-service", false);
-        String orderUrl = instanceInfo.getHomePageUrl() + "api/v1/orders/";
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<OrderOrderDTO> response = restTemplate.postForEntity(orderUrl, order, OrderOrderDTO.class);
-
-        if (response.getStatusCode().is2xxSuccessful()) {
-            this.cartRepository.delete(cart);
-        }
-
-        order = response.getBody();
+//        RestTemplate restTemplate = new RestTemplate();
+//        ResponseEntity<OrderOrderDTO> response = restTemplate.postForEntity(orderUrl, order, OrderOrderDTO.class);
+//
+//        if (response.getStatusCode().is2xxSuccessful()) {
+//            this.cartRepository.delete(cart);
+//        }
+//
+//        order = response.getBody();
 
         return order;
+    }
+
+    private CartDTO CartToCartDTO(Cart cart) {
+        return new CartDTO(cart.getProducts());
+    }
+
+    private OrderDTO CartToOrderDTO(Cart cart) {
+        return new OrderDTO("1", "1" , cart.getProducts());
     }
 }

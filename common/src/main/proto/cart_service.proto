@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "fr.polytech.polystore.common.grpc";
+option java_outer_classname = "CartServiceProto";
+
+package cart_service;
+
+service CartServiceGRPC {
+  rpc GetCart (GetCartRequestGRPC) returns (CartGRPC);
+  rpc Order (OrderRequestGRPC) returns (OrderResponseGRPC);
+  rpc AddProduct (AddProductRequestGRPC) returns (AddProductResponseGRPC);
+}
+
+message GetCartRequestGRPC {}
+message OrderRequestGRPC {}
+message OrderResponseGRPC {}
+message AddProductResponseGRPC {}
+message AddProductRequestGRPC {
+  string id = 1;
+  int32 quantity = 2;
+}
+
+message CartGRPC {
+  repeated CartProductGRPC products = 1;
+}
+
+message CartProductGRPC {
+  string id = 1;
+  int32 quantity = 2;
+}
+

@@ -1,39 +1,20 @@
 package fr.polytech.polystore.cart.entities;
 
-import fr.polytech.polystore.cart.dtos.ProductDTO;
+import fr.polytech.polystore.common.dtos.CartProductDTO;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 import java.util.List;
-import java.util.Map;
 
 @RedisHash("cart")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Cart {
     @Id
     private String userId;
-    private List<ProductDTO> products;
-
-    public Cart() {
-    }
-
-    public Cart(String userId, List<ProductDTO> products) {
-        this.userId = userId;
-        this.products = products;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public List<ProductDTO> getProducts() {
-        return products;
-    }
-
-    public void setProducts(List<ProductDTO> products) {
-        this.products = products;
-    }
+    private List<CartProductDTO> products;
 }
