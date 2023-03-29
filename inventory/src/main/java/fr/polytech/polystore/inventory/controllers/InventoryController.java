@@ -1,6 +1,6 @@
 package fr.polytech.polystore.inventory.controllers;
 
-import fr.polytech.polystore.inventory.controllers.InventoryServiceGrpc.InventoryServiceImplBase;
+import fr.polytech.polystore.common.grpc.*;
 import fr.polytech.polystore.inventory.dtos.StockDTO;
 import fr.polytech.polystore.inventory.service.InventoryService;
 import io.grpc.Status;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @GrpcService
-public class InventoryController extends InventoryServiceImplBase {
+public class InventoryController extends InventoryServiceGrpc.InventoryServiceImplBase {
 
     @Autowired
     private InventoryService inventoryService;

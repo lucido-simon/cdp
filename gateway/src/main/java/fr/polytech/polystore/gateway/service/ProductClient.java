@@ -1,11 +1,9 @@
 package fr.polytech.polystore.gateway.service;
 
+import fr.polytech.polystore.common.grpc.*;
 import fr.polytech.polystore.gateway.dtos.CreateProductAggregateDTO;
 import fr.polytech.polystore.gateway.dtos.ProductDTO;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import net.devh.boot.grpc.client.inject.GrpcClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 

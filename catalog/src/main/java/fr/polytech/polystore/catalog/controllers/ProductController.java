@@ -1,10 +1,9 @@
 package fr.polytech.polystore.catalog.controllers;
 
-import fr.polytech.polystore.catalog.*;
-import fr.polytech.polystore.catalog.CatalogServiceGrpc.CatalogServiceImplBase;
 import fr.polytech.polystore.catalog.dtos.CreateProductDTO;
 import fr.polytech.polystore.catalog.dtos.ProductDTO;
 import fr.polytech.polystore.catalog.services.ProductService;
+import fr.polytech.polystore.common.grpc.*;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
@@ -14,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 @GrpcService
-public class ProductController extends CatalogServiceImplBase {
+public class ProductController extends CatalogServiceGrpc.CatalogServiceImplBase {
 
     @Autowired
     ProductService productService;
