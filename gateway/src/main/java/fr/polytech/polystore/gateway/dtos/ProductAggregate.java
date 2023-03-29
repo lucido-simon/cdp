@@ -15,11 +15,11 @@ public class ProductAggregate {
     private Integer quantity;
 
     public static ProductAggregate from(ProductDTO product, StockDTO stock) {
-        return new ProductAggregate(product.getId(), product.getName(), stock.getPrice(), stock.getQuantity());
+        return new ProductAggregate(product.id, product.name, stock.getPrice(), stock.getQuantity());
     }
 
     public static ProductAggregate from(ProductDTO product) {
-        return new ProductAggregate(product.getId(), product.getName(), null, null);
+        return new ProductAggregate(product.id, product.name, null, null);
     }
 
 }

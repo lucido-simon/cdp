@@ -45,7 +45,7 @@ public class ProductAggregatorService {
 
     private List<ProductAggregate> combineList(Tuple2<List<ProductDTO>, List<StockDTO>> tuple) {
         return tuple.getT1().stream().map(productDTO ->
-                tuple.getT2().stream().filter(stockDTO -> stockDTO.getId().equals(productDTO.getId())).findFirst().map(stockDTO ->
+                tuple.getT2().stream().filter(stockDTO -> stockDTO.getId().equals(productDTO.id)).findFirst().map(stockDTO ->
                         ProductAggregate.from(productDTO, stockDTO)
                 ).orElseGet(() ->
                         ProductAggregate.from(productDTO)
@@ -56,10 +56,15 @@ public class ProductAggregatorService {
     public Mono<ProductAggregate> createProduct(CreateProductAggregateDTO product) {
         return this.productClient.createProduct(product)
                 .flatMap(productDTO ->
-                            this.stockClient.createStock(new StockDTO(productDTO.getId(), product.getPrice(), product.getQuantity())
-                        ).map(stockDTO ->
-                                ProductAggregate.from(productDTO, stockDTO)
-                        ).defaultIfEmpty(ProductAggregate.from(productDTO))
+                        {
+                            StockDTO stockDTO = new StockDTO();
+                            stockDTO.setId(productDTO.id);
+                            stockDTO.setQuantity(product.getQuantity());
+                            stockDTO.setPrice(product.getPrice());
+                            return this.stockClient.createStock(stockDTO).map(stockDTOMono ->
+                                    ProductAggregate.from(productDTO, stockDTOMono)
+                            ).defaultIfEmpty(ProductAggregate.from(productDTO));
+                        }
 
                 );
     }

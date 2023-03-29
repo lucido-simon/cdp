@@ -1,14 +1,14 @@
 package fr.polytech.polystore.gateway.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
 @Data
-@ToString
-@AllArgsConstructor()
+@NoArgsConstructor
 public class StockDTO {
     private String id;
     private double price;
+
     private int quantity;
 }
+

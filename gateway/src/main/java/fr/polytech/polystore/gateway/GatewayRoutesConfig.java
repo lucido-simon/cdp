@@ -12,9 +12,6 @@ public class GatewayRoutesConfig {
     @Value("${order.service.baseurl}")
     private String orderServiceBaseUrl;
 
-    @Value("${catalog.service.baseurl}")
-    private String catalogServiceBaseUrl;
-
     @Value("${cart.service.baseurl}")
     private String cartServiceBaseUrl;
 

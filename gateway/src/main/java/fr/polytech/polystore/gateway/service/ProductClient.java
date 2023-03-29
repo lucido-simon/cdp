@@ -2,54 +2,48 @@ package fr.polytech.polystore.gateway.service;
 
 import fr.polytech.polystore.gateway.dtos.CreateProductAggregateDTO;
 import fr.polytech.polystore.gateway.dtos.ProductDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class ProductClient {
+public class ProductClient implements IGRPCService {
 
-    @Value("${catalog.service.baseurl}")
-    private String productsServiceBaseUrl;
-
-    private WebClient client;
-
-    public ProductClient(WebClient.Builder builder) {
-        this.client = builder.baseUrl(this.productsServiceBaseUrl).build();
-    }
+    @GrpcClient("catalog_service")
+    private CatalogServiceGrpc.CatalogServiceFutureStub futureStub;
 
     public Mono<ProductDTO> getProduct(String productId) {
-        return this.client
-                .get()
-                .uri("/api/v1/products/{productId}", productId)
-                .retrieve()
-                .bodyToMono(ProductDTO.class)
-                .onErrorResume(ex -> Mono.empty()); // switch it to empty in case of error
+        GetProductRequestGRPC request = GetProductRequestGRPC.newBuilder().setId(productId).build();
+        return createMonoFromFuture(futureStub.getProduct(request)).map(this::convertFromProtoProduct);
     }
 
     public Mono<List<ProductDTO>> getProducts() {
-        List<ProductDTO> test = new ArrayList<>();
-        return this.client
-                .get()
-                .uri("/api/v1/products")
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<ProductDTO>>() {})
-                .onErrorResume(ex -> Mono.empty());
+        GetProductsRequestGRPC request = GetProductsRequestGRPC.newBuilder().build();
+        return createMonoFromFuture(futureStub.getProducts(request)).map(GetProductsResponseGRPC::getProductsList)
+                .map(products -> products.stream().map(this::convertFromProtoProduct).collect(Collectors.toList()));
     }
 
     public Mono<ProductDTO> createProduct(CreateProductAggregateDTO product) {
-        return this.client
-                .post()
-                .uri("/api/v1/products")
-                .body(Mono.just(product), CreateProductAggregateDTO.class)
-                .retrieve()
-                .bodyToMono(ProductDTO.class);
+        CreateProductGRPC request = CreateProductGRPC.newBuilder()
+                .setName(product.getName())
+                .build();
+        return createMonoFromFuture(futureStub.addProduct(request)).map(this::convertFromProtoProduct);
+    }
+
+    private ProductDTO convertFromProtoProduct(ProductGRPC protoProduct) {
+        return new ProductDTO(protoProduct.getId(), protoProduct.getName());
+    }
+
+    private ProductGRPC convertToProtoProduct(ProductDTO productDTO) {
+        return ProductGRPC.newBuilder()
+                .setId(productDTO.id)
+                .setName(productDTO.name)
+                .build();
     }
 }

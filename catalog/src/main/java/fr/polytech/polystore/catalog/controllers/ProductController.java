@@ -5,6 +5,8 @@ import fr.polytech.polystore.catalog.CatalogServiceGrpc.CatalogServiceImplBase;
 import fr.polytech.polystore.catalog.dtos.CreateProductDTO;
 import fr.polytech.polystore.catalog.dtos.ProductDTO;
 import fr.polytech.polystore.catalog.services.ProductService;
+import io.grpc.Status;
+import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,7 @@ public class ProductController extends CatalogServiceImplBase {
         List<ProductDTO> productDTOList = productService.getProducts();
         List<ProductGRPC> products = productDTOList.stream().map(this::convertToProtoProduct).toList();
 
-        GetProductsResponseGRPC response = GetProductsResponseGRPC.newBuilder().addAllProducts((Iterable<? extends ProductGRPC>) products.iterator()).build();
+        GetProductsResponseGRPC response = GetProductsResponseGRPC.newBuilder().addAllProducts(products).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
@@ -31,6 +33,10 @@ public class ProductController extends CatalogServiceImplBase {
     public void getProduct(GetProductRequestGRPC request, StreamObserver<ProductGRPC> responseObserver) {
         String id = request.getId();
         ProductDTO productDTO = productService.getProduct(id);
+        if (productDTO == null) {
+            responseObserver.onError(new StatusException(Status.NOT_FOUND));
+            return;
+        }
 
         ProductGRPC product = convertToProtoProduct(productDTO);
         responseObserver.onNext(product);

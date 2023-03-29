@@ -3,6 +3,8 @@ package fr.polytech.polystore.inventory.controllers;
 import fr.polytech.polystore.inventory.controllers.InventoryServiceGrpc.InventoryServiceImplBase;
 import fr.polytech.polystore.inventory.dtos.StockDTO;
 import fr.polytech.polystore.inventory.service.InventoryService;
+import io.grpc.Status;
+import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,10 @@ public class InventoryController extends InventoryServiceImplBase {
     public void getStock(GetStockRequestGRPC request, StreamObserver<StockGRPC> responseObserver) {
         String id = request.getId();
         StockDTO stockDTO = inventoryService.getStock(id);
+        if (stockDTO == null) {
+            responseObserver.onError(new StatusException(Status.NOT_FOUND));
+            return;
+        }
 
         StockGRPC stock = convertToProtoStock(stockDTO);
         responseObserver.onNext(stock);

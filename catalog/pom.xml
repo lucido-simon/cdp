@@ -15,12 +15,11 @@
 	<description>Cart for PolyStore</description>
 	<properties>
 		<java.version>19</java.version>
-		<grpc.version>1.51.0</grpc.version>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>net.devh</groupId>
-			<artifactId>grpc-spring-boot-starter</artifactId>
+			<artifactId>grpc-server-spring-boot-starter</artifactId>
 			<version>2.14.0.RELEASE</version>
 		</dependency>
 		<dependency>
