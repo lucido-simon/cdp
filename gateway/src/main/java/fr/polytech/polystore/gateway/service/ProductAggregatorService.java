@@ -1,9 +1,9 @@
 package fr.polytech.polystore.gateway.service;
 
-import fr.polytech.polystore.gateway.dtos.CreateProductAggregateDTO;
-import fr.polytech.polystore.gateway.dtos.ProductAggregate;
-import fr.polytech.polystore.gateway.dtos.ProductDTO;
-import fr.polytech.polystore.gateway.dtos.StockDTO;
+import fr.polytech.polystore.common.dtos.ProductDTO;
+import fr.polytech.polystore.common.dtos.StockDTO;
+import fr.polytech.polystore.common.dtos.CreateProductAggregateDTO;
+import fr.polytech.polystore.common.dtos.ProductAggregateDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -19,7 +19,7 @@ public class ProductAggregatorService {
 
     private final StockClient stockClient;
 
-    public Mono<ProductAggregate> getProduct(String productId) {
+    public Mono<ProductAggregateDTO> getProduct(String productId) {
         return Mono.zip(
                         this.productClient.getProduct(productId),
                         this.stockClient.getStock(productId)
@@ -27,7 +27,7 @@ public class ProductAggregatorService {
                 .map(this::combine);
     }
 
-    public Mono<List<ProductAggregate>> getProducts() {
+    public Mono<List<ProductAggregateDTO>> getProducts() {
         return Mono.zip(
                         this.productClient.getProducts(),
                         this.stockClient.getStocks()
@@ -36,34 +36,34 @@ public class ProductAggregatorService {
                 .defaultIfEmpty(List.of());
     }
 
-    private ProductAggregate combine(Tuple2<ProductDTO, StockDTO> tuple) {
-        return ProductAggregate.from(
+    private ProductAggregateDTO combine(Tuple2<ProductDTO, StockDTO> tuple) {
+        return ProductAggregateDTO.from(
                 tuple.getT1(),
                 tuple.getT2()
         );
     }
 
-    private List<ProductAggregate> combineList(Tuple2<List<ProductDTO>, List<StockDTO>> tuple) {
+    private List<ProductAggregateDTO> combineList(Tuple2<List<ProductDTO>, List<StockDTO>> tuple) {
         return tuple.getT1().stream().map(productDTO ->
-                tuple.getT2().stream().filter(stockDTO -> stockDTO.getId().equals(productDTO.id)).findFirst().map(stockDTO ->
-                        ProductAggregate.from(productDTO, stockDTO)
+                tuple.getT2().stream().filter(stockDTO -> stockDTO.getId().equals(productDTO.getId())).findFirst().map(stockDTO ->
+                        ProductAggregateDTO.from(productDTO, stockDTO)
                 ).orElseGet(() ->
-                        ProductAggregate.from(productDTO)
+                        ProductAggregateDTO.from(productDTO)
                 )
         ).toList();
     }
 
-    public Mono<ProductAggregate> createProduct(CreateProductAggregateDTO product) {
+    public Mono<ProductAggregateDTO> createProduct(CreateProductAggregateDTO product) {
         return this.productClient.createProduct(product)
                 .flatMap(productDTO ->
                         {
                             StockDTO stockDTO = new StockDTO();
-                            stockDTO.setId(productDTO.id);
+                            stockDTO.setId(productDTO.getId());
                             stockDTO.setQuantity(product.getQuantity());
                             stockDTO.setPrice(product.getPrice());
                             return this.stockClient.createStock(stockDTO).map(stockDTOMono ->
-                                    ProductAggregate.from(productDTO, stockDTOMono)
-                            ).defaultIfEmpty(ProductAggregate.from(productDTO));
+                                    ProductAggregateDTO.from(productDTO, stockDTOMono)
+                            ).defaultIfEmpty(ProductAggregateDTO.from(productDTO));
                         }
 
                 );

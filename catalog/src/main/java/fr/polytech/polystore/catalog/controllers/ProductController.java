@@ -1,7 +1,7 @@
 package fr.polytech.polystore.catalog.controllers;
 
-import fr.polytech.polystore.catalog.dtos.CreateProductDTO;
-import fr.polytech.polystore.catalog.dtos.ProductDTO;
+import fr.polytech.polystore.common.dtos.CreateProductDTO;
+import fr.polytech.polystore.common.dtos.ProductDTO;
 import fr.polytech.polystore.catalog.services.ProductService;
 import fr.polytech.polystore.common.grpc.*;
 import io.grpc.Status;
@@ -53,6 +53,6 @@ public class ProductController extends CatalogServiceGrpc.CatalogServiceImplBase
     }
 
     private ProductGRPC convertToProtoProduct(ProductDTO productDTO) {
-        return ProductGRPC.newBuilder().setId(productDTO.id).setName(productDTO.name).build();
+        return ProductGRPC.newBuilder().setId(productDTO.getId()).setName(productDTO.getName()).build();
     }
 }

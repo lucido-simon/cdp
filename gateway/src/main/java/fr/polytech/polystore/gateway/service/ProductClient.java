@@ -1,8 +1,8 @@
 package fr.polytech.polystore.gateway.service;
 
+import fr.polytech.polystore.common.dtos.ProductDTO;
 import fr.polytech.polystore.common.grpc.*;
-import fr.polytech.polystore.gateway.dtos.CreateProductAggregateDTO;
-import fr.polytech.polystore.gateway.dtos.ProductDTO;
+import fr.polytech.polystore.common.dtos.CreateProductAggregateDTO;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -40,8 +40,8 @@ public class ProductClient implements IGRPCService {
 
     private ProductGRPC convertToProtoProduct(ProductDTO productDTO) {
         return ProductGRPC.newBuilder()
-                .setId(productDTO.id)
-                .setName(productDTO.name)
+                .setId(productDTO.getId())
+                .setName(productDTO.getName())
                 .build();
     }
 }

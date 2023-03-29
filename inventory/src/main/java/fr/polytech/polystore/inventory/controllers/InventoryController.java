@@ -1,7 +1,7 @@
 package fr.polytech.polystore.inventory.controllers;
 
 import fr.polytech.polystore.common.grpc.*;
-import fr.polytech.polystore.inventory.dtos.StockDTO;
+import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.inventory.service.InventoryService;
 import io.grpc.Status;
 import io.grpc.StatusException;
