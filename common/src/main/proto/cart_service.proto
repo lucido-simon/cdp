@@ -14,7 +14,9 @@ service CartServiceGRPC {
 
 message GetCartRequestGRPC {}
 message OrderRequestGRPC {}
-message OrderResponseGRPC {}
+message OrderResponseGRPC {
+  string id = 1;
+}
 message AddProductResponseGRPC {}
 message AddProductRequestGRPC {
   string id = 1;

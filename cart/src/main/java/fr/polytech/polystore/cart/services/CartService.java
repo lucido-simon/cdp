@@ -1,7 +1,7 @@
 package fr.polytech.polystore.cart.services;
 
 
-import fr.polytech.polystore.cart.dtos.CartDTO;
+import fr.polytech.polystore.common.dtos.CartDTO;
 import fr.polytech.polystore.cart.entities.Cart;
 import fr.polytech.polystore.cart.repositories.CartRepository;
 import fr.polytech.polystore.common.PolystoreException;
@@ -27,11 +27,6 @@ public class CartService {
 
     @Autowired
     CartRepository cartRepository;
-
-    @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder.build();
-    }
 
     public CartDTO getCart() {
         Cart cart = this.cartRepository.findById("1").orElse(null);
@@ -84,15 +79,6 @@ public class CartService {
         }
 
         OrderDTO order = this.CartToOrderDTO(cart);
-
-//        RestTemplate restTemplate = new RestTemplate();
-//        ResponseEntity<OrderOrderDTO> response = restTemplate.postForEntity(orderUrl, order, OrderOrderDTO.class);
-//
-//        if (response.getStatusCode().is2xxSuccessful()) {
-//            this.cartRepository.delete(cart);
-//        }
-//
-//        order = response.getBody();
 
         return order;
     }

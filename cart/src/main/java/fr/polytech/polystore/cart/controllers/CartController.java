@@ -1,6 +1,6 @@
 package fr.polytech.polystore.cart.controllers;
 
-import fr.polytech.polystore.cart.dtos.CartDTO;
+import fr.polytech.polystore.common.dtos.CartDTO;
 import fr.polytech.polystore.cart.services.CartService;
 
 import fr.polytech.polystore.common.PolystoreException;
@@ -41,7 +41,7 @@ public class CartController extends CartServiceGRPCGrpc.CartServiceGRPCImplBase 
             return;
         }
 
-        OrderResponseGRPC orderGRPC = OrderResponseGRPC.newBuilder().build();
+        OrderResponseGRPC orderGRPC = OrderResponseGRPC.newBuilder().setId("5").build();
         responseObserver.onNext(orderGRPC);
         responseObserver.onCompleted();
     }

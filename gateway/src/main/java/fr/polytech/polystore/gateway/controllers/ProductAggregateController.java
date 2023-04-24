@@ -11,26 +11,26 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
-@RequestMapping
+@RequestMapping("/api/v1/products")
 public class ProductAggregateController {
 
     @Autowired
     private ProductAggregatorService service;
 
-    @PostMapping("api/v1/products/")
+    @PostMapping
     public Mono<ResponseEntity<ProductAggregateDTO>> createProduct(@RequestBody CreateProductAggregateDTO product){
         return this.service.createProduct(product)
                 .map(ResponseEntity::ok);
     }
 
-    @GetMapping("api/v1/products/{productId}")
+    @GetMapping("{productId}")
     public Mono<ResponseEntity<ProductAggregateDTO>> getProduct(@PathVariable String productId){
         return this.service.getProduct(productId)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("api/v1/products/")
+    @GetMapping
     public Mono<ResponseEntity<List<ProductAggregateDTO>>> getProducts(){
         return this.service.getProducts()
                 .map(ResponseEntity::ok);

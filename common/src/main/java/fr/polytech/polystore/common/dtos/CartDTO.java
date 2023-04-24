@@ -1,4 +1,4 @@
-package fr.polytech.polystore.cart.dtos;
+package fr.polytech.polystore.common.dtos;
 
 import fr.polytech.polystore.common.dtos.CartProductDTO;
 import lombok.AllArgsConstructor;
