@@ -9,7 +9,6 @@ import fr.polytech.polystore.common.dtos.CartProductDTO;
 import fr.polytech.polystore.common.dtos.OrderDTO;
 import fr.polytech.polystore.common.grpc.CatalogServiceGrpc;
 import fr.polytech.polystore.common.grpc.GetProductRequestGRPC;
-import fr.polytech.polystore.common.grpc.ProductGRPC;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
@@ -44,9 +43,8 @@ public class CartService {
     }
 
     public void addProduct(CartProductDTO createProductDTO) throws PolystoreException.NotFound {
-        ProductGRPC productGRPC = null;
         try {
-            productGRPC = this.blockingStub.getProduct(GetProductRequestGRPC.newBuilder().setId(createProductDTO.getId()).build());
+            this.blockingStub.getProduct(GetProductRequestGRPC.newBuilder().setId(createProductDTO.getId()).build());
         } catch (StatusRuntimeException e) {
             if (e.getStatus().getCode().equals(Status.NOT_FOUND.getCode())) {
                 throw new PolystoreException.NotFound("Product not found");
