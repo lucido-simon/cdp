@@ -4,6 +4,7 @@ import com.rabbitmq.client.Channel;
 import fr.polytech.polystore.common.dtos.OrderDTO;
 import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
+import fr.polytech.polystore.inventory.service.InventoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -27,17 +28,20 @@ public class InventoryListener {
     @Autowired
     private MessageConverter messageConverter;
 
+    @Autowired
+    private InventoryService inventoryService;
+
     @RabbitListener(queues = "${order.inventory.queue}")
     public void receive(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
         try {
             Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
             ParameterizedTypeReference<PolyStoreMessage<List<StockDTO>>> typeRef = new ParameterizedTypeReference<>() {
             };
-            PolyStoreMessage<OrderDTO> message = (PolyStoreMessage<OrderDTO>) converter.fromMessage(payload, typeRef);
+            PolyStoreMessage<List<StockDTO>> message = (PolyStoreMessage<List<StockDTO>>) converter.fromMessage(payload, typeRef);
             logger.info("Received message: {}", message.getOrderStatus());
             logger.debug("Payload: {}", message.getPayload());
 
-            // Do stuff
+            inventoryService.removeStockFromOrder(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {

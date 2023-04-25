@@ -18,7 +18,7 @@ public class OrderStock {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tech_id;
 
-    @Column(name = "order_id", unique = true, nullable = false)
+    @Column(name = "order_id", nullable = false)
     private String orderId;
 
     @Column(name = "product_guid", nullable = false)
