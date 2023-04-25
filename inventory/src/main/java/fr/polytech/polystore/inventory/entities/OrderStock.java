@@ -19,16 +19,16 @@ public class OrderStock {
     private Long tech_id;
 
     @Column(name = "order_id", unique = true, nullable = false)
-    private String order_id;
+    private String orderId;
 
     @Column(name = "product_guid", nullable = false)
-    private String product_guid;
+    private String productId;
 
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
     @Column(name = "price", nullable = false)
-    private double buy_price;
+    private double buyPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_guid", referencedColumnName = "product_guid", insertable = false, updatable = false)
