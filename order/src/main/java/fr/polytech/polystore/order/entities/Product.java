@@ -1,4 +1,4 @@
-package fr.polytech.polystore.inventory.entities;
+package fr.polytech.polystore.order.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

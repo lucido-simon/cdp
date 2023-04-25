@@ -1,5 +1,6 @@
-package fr.polytech.polystore.inventory.entities;
+package fr.polytech.polystore.order.entities;
 
+import fr.polytech.polystore.common.models.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,10 @@ public class Order {
 
     @Column(name = "user_id")
     private String userId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_status", nullable = false)
+    private OrderStatus orderStatus;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderProduct> orderProducts;

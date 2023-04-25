@@ -1,8 +1,8 @@
-package fr.polytech.polystore.inventory.controllers;
+package fr.polytech.polystore.order.controllers;
 
-import fr.polytech.polystore.inventory.dtos.OrderDTO;
-import fr.polytech.polystore.inventory.entities.Order;
-import fr.polytech.polystore.inventory.service.OrderService;
+import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.order.entities.Order;
+import fr.polytech.polystore.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +21,6 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
-
-    @PostMapping("/")
-    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO orderDTO) {
-        OrderDTO order = orderService.createOrder(orderDTO);
-        return new ResponseEntity<OrderDTO>(order, HttpStatus.CREATED);
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrder(@RequestParam Long id) {

@@ -1,4 +1,4 @@
-package fr.polytech.polystore.inventory.service;
+package fr.polytech.polystore.order.service;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

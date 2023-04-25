@@ -1,16 +1,16 @@
-package fr.polytech.polystore.inventory.service;
+package fr.polytech.polystore.order.service;
 
-import fr.polytech.polystore.inventory.dtos.OrderDTO;
-import fr.polytech.polystore.inventory.dtos.OrderProductDTO;
-import fr.polytech.polystore.inventory.entities.Order;
-import fr.polytech.polystore.inventory.entities.OrderProduct;
-import fr.polytech.polystore.inventory.entities.Product;
-import fr.polytech.polystore.inventory.repositories.OrderProductRepository;
-import fr.polytech.polystore.inventory.repositories.OrderRepository;
-import fr.polytech.polystore.inventory.repositories.ProductRepository;
+import fr.polytech.polystore.common.dtos.CartProductDTO;
+import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.common.models.OrderStatus;
+import fr.polytech.polystore.order.entities.Order;
+import fr.polytech.polystore.order.entities.OrderProduct;
+import fr.polytech.polystore.order.entities.Product;
+import fr.polytech.polystore.order.repositories.OrderProductRepository;
+import fr.polytech.polystore.order.repositories.OrderRepository;
+import fr.polytech.polystore.order.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 
 import java.util.List;
 import java.util.Optional;
@@ -28,17 +28,18 @@ public class OrderService {
     @Autowired
     private OrderProductRepository orderProductRepository;
 
-    public OrderDTO createOrder(OrderDTO orderDTO) {
+    public String createOrder(OrderDTO orderDTO) {
         Order order = new Order();
         order.setId(java.util.UUID.randomUUID().toString());
         order.setUserId(orderDTO.getUserId());
+        order.setOrderStatus(OrderStatus.OrderCheckout);
 
-        this.orderRepository.save(order);
+        orderRepository.save(order);
 
         List<OrderProduct> orderProducts = orderDTO.getOrderProducts().stream().map(op -> {
-            Optional<Product> productOption = productRepository.findProductByProductGuid(op.getProductId());
+            Optional<Product> productOption = productRepository.findProductByProductGuid(op.getId());
             Product product = productOption.orElse(null);
-            if (product == null ) {
+            if (product == null) {
                 product = newProductFromOrderProductDTO(op);
             }
             OrderProduct orderProduct = new OrderProduct();
@@ -50,27 +51,15 @@ public class OrderService {
         }).collect(Collectors.toList());
 
         order.setOrderProducts(orderProducts);
+        order.setOrderStatus(OrderStatus.OrderCreated);
         orderRepository.save(order);
 
-        OrderDTO dto = new OrderDTO();
-        String id = order.getId();
-        dto.setId(id);
-        dto.setUserId(order.getUserId());
-        dto.setOrderProducts(
-                order.getOrderProducts().stream().map(op -> {
-                    OrderProductDTO opDTO = new OrderProductDTO();
-                    opDTO.setProductId(op.getProduct().getProductGuid());
-                    opDTO.setQuantity(op.getQuantity());
-                    return opDTO;
-                }).collect(Collectors.toList())
-        );
-
-        return dto;
+        return order.getId();
     }
 
-    private Product newProductFromOrderProductDTO(OrderProductDTO op) {
+    private Product newProductFromOrderProductDTO(CartProductDTO op) {
         Product product = new Product();
-        product.setProductGuid(op.getProductId());
+        product.setProductGuid(op.getId());
         this.productRepository.save(product);
         return product;
     }
