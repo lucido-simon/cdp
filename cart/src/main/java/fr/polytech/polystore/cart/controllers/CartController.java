@@ -35,15 +35,14 @@ public class CartController extends CartServiceGRPCGrpc.CartServiceGRPCImplBase 
 
     @Override
     public void order(OrderRequestGRPC request, StreamObserver<OrderResponseGRPC> responseObserver) {
-        OrderDTO order = this.cartService.order();
-        if (order == null) {
-            responseObserver.onError(new StatusException(Status.NOT_FOUND));
-            return;
+        try {
+            String order = this.cartService.order();
+            OrderResponseGRPC orderGRPC = OrderResponseGRPC.newBuilder().setId(order).build();
+            responseObserver.onNext(orderGRPC);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(new StatusException(Status.INTERNAL));
         }
-
-        OrderResponseGRPC orderGRPC = OrderResponseGRPC.newBuilder().setId("5").build();
-        responseObserver.onNext(orderGRPC);
-        responseObserver.onCompleted();
     }
 
     @Override

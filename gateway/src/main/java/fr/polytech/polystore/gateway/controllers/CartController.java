@@ -24,7 +24,7 @@ public class CartController {
 
     @PostMapping("order")
     public Mono<ResponseEntity<String>> order() {
-        return cartClient.order("1").map(ResponseEntity::ok);
+        return cartClient.order("1").map(ResponseEntity::ok).onErrorReturn(ResponseEntity.internalServerError().build());
     }
 
     @PostMapping("cart")

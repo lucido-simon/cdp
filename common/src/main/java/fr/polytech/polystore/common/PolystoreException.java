@@ -13,4 +13,10 @@ public class PolystoreException extends Exception {
         }
     }
 
+    public static class Unknown extends PolystoreException {
+        public Unknown(String message) {
+            super(message);
+        }
+    }
+
 }

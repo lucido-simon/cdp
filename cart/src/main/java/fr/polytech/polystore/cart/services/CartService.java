@@ -13,10 +13,7 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 
@@ -26,7 +23,10 @@ public class CartService {
     private CatalogServiceGrpc.CatalogServiceBlockingStub blockingStub;
 
     @Autowired
-    CartRepository cartRepository;
+    private CartRepository cartRepository;
+
+    @Autowired
+    private CartProducer cartProducer;
 
     public CartDTO getCart() {
         Cart cart = this.cartRepository.findById("1").orElse(null);
@@ -71,7 +71,7 @@ public class CartService {
         this.cartRepository.save(cart);
     }
 
-    public OrderDTO order() {
+    public String order() throws PolystoreException.Unknown {
         Cart cart = this.cartRepository.findById("1").orElse(null);
 
         if (cart == null) {
@@ -80,7 +80,11 @@ public class CartService {
 
         OrderDTO order = this.CartToOrderDTO(cart);
 
-        return order;
+        try {
+            return this.cartProducer.send(order);
+        } catch (Exception e) {
+            throw new PolystoreException.Unknown(e.getMessage());
+        }
     }
 
     private CartDTO CartToCartDTO(Cart cart) {
