@@ -2,6 +2,7 @@ package fr.polytech.polystore.order.service;
 
 import fr.polytech.polystore.common.dtos.CartProductDTO;
 import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.order.entities.Order;
 import fr.polytech.polystore.order.entities.OrderProduct;
@@ -44,7 +45,13 @@ public class OrderService {
         orderRepository.save(order);
 
         try {
-            orderProducer.convertAndSendInventory();
+            orderProducer.convertAndSendInventory(orderProducts.stream().map(product -> {
+                StockDTO stockDTO = new StockDTO();
+                stockDTO.setId(product.getProductId());
+                stockDTO.setQuantity(product.getQuantity());
+                return stockDTO;
+            }).collect(Collectors.toList())
+            , order.getId(), order.getOrderStatus());
         } catch (Exception e) {
             this.compensate(order.getId());
         }
