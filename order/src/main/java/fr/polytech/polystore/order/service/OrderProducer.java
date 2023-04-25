@@ -31,7 +31,7 @@ public class OrderProducer {
         logger.info("Sending to inventory for {}", orderId);
         PolyStoreMessage<List<StockDTO>> message = new PolyStoreMessage<>(orderId, orderStatus, stocks);
         logger.debug("Message: {}", message);
-        this.template.convertAndSend(message);
+        this.template.convertAndSend(orderInventoryQueue.getName(), message);
     }
 
     public void convertAndSendCompensationInventory() {
