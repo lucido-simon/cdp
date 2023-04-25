@@ -9,7 +9,6 @@ import fr.polytech.polystore.inventory.repositories.OrderProductRepository;
 import fr.polytech.polystore.inventory.repositories.OrderRepository;
 import fr.polytech.polystore.inventory.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.stereotype.Service;
 
 
@@ -18,7 +17,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@EnableDiscoveryClient
 public class OrderService {
 
     @Autowired
