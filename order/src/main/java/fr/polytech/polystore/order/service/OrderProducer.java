@@ -16,9 +16,6 @@ public class OrderProducer {
     @Autowired
     private Queue orderInventoryCompensationQueue;
 
-    @Autowired
-    private Queue orderCartQueue;
-
     public void convertAndSendInventory() {
         String message = "Hello World!";
         this.template.convertAndSend(orderInventoryQueue.getName(), message);
@@ -28,12 +25,6 @@ public class OrderProducer {
     public void convertAndSendCompensationInventory() {
         String message = "Hello World!";
         this.template.convertAndSend(orderInventoryCompensationQueue.getName(), message);
-        System.out.println(" [x] Sent '" + message + "'");
-    }
-
-    public void convertAndSendCart() {
-        String message = "Hello World!";
-        this.template.convertAndSend(orderCartQueue.getName(), message);
         System.out.println(" [x] Sent '" + message + "'");
     }
 }
