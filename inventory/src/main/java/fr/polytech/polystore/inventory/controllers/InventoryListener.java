@@ -1,7 +1,7 @@
 package fr.polytech.polystore.inventory.controllers;
 
 import com.rabbitmq.client.Channel;
-import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.common.PolystoreException;
 import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
 import fr.polytech.polystore.inventory.service.InventoryService;
@@ -32,7 +32,7 @@ public class InventoryListener {
     private InventoryService inventoryService;
 
     @RabbitListener(queues = "${order.inventory.queue}")
-    public void receive(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
+    public void receive(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException, PolystoreException.NotFound {
         try {
             Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
             ParameterizedTypeReference<PolyStoreMessage<List<StockDTO>>> typeRef = new ParameterizedTypeReference<>() {

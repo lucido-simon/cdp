@@ -33,9 +33,8 @@ public class InventoryProducer {
         this.template.convertAndSend(inventoryOrderQueue.getName(), message);
     }
 
-    public void convertAndSendCompensation() {
-        String message = "Hello World!";
-        this.template.convertAndSend(inventoryOrderCompensationQueue.getName(), message);
-        System.out.println(" [x] Sent '" + message + "'");
+    public void convertAndSendCompensation(String orderId, OrderStatus orderStatus) {
+        logger.error("Sending compensation for {}", orderId);
+        this.template.convertAndSend(inventoryOrderCompensationQueue.getName(), new PolyStoreMessage<>(orderId, orderStatus, null));
     }
 }

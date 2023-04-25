@@ -3,6 +3,7 @@ package fr.polytech.polystore.inventory.service;
 
 import fr.polytech.polystore.common.PolystoreException;
 import fr.polytech.polystore.common.dtos.StockDTO;
+import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
 import fr.polytech.polystore.inventory.entities.OrderStock;
 import fr.polytech.polystore.inventory.entities.Stock;
@@ -51,13 +52,17 @@ public class InventoryService {
     }
 
     @Transactional
-    public List<StockDTO> removeStockFromOrder(PolyStoreMessage<List<StockDTO>> order) {
+    public void removeStockFromOrder(PolyStoreMessage<List<StockDTO>> order) throws PolystoreException.NotFound {
         List<StockDTO> stocks = order.getPayload();
 
         try {
             for (StockDTO stock : stocks) {
                 Stock stockEntity = this.stockRepository.findStockById(stock.getId()).orElseThrow(() -> new PolystoreException.NotFound("Stock not found"));
-                stockEntity.setQuantity(stockEntity.getQuantity() - stock.getQuantity());
+                int quantity = stockEntity.getQuantity() - stock.getQuantity();
+                if (quantity < 0) {
+                    throw new PolystoreException.NotEnoughStock("Not enough stock");
+                }
+                stockEntity.setQuantity(quantity);
                 stock.setPrice(stockEntity.getPrice());
 
                 OrderStock orderStock = new OrderStock();
@@ -70,15 +75,13 @@ public class InventoryService {
             }
 
             this.inventoryProducer.send(stocks, order.getOrderId());
-        } catch (PolystoreException.NotFound e) {
+        } catch (Exception e) {
             this.failure(order);
         }
-        return stocks;
     }
 
     private void failure(PolyStoreMessage<List<StockDTO>> order) {
-        // TODO
-        throw new RuntimeException("Not implemented");
+        this.inventoryProducer.convertAndSendCompensation(order.getOrderId(), OrderStatus.OrderPreparationFailed);
     }
 
     private StockDTO stockDTOfromStock(Stock stock) {
