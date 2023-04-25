@@ -5,10 +5,8 @@ import fr.polytech.polystore.common.dtos.OrderDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.order.entities.Order;
 import fr.polytech.polystore.order.entities.OrderProduct;
-import fr.polytech.polystore.order.entities.Product;
 import fr.polytech.polystore.order.repositories.OrderProductRepository;
 import fr.polytech.polystore.order.repositories.OrderRepository;
-import fr.polytech.polystore.order.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +18,10 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     @Autowired
-    private OrderRepository orderRepository;
+    private OrderProducer orderProducer;
 
     @Autowired
-    private ProductRepository productRepository;
+    private OrderRepository orderRepository;
 
     @Autowired
     private OrderProductRepository orderProductRepository;
@@ -32,36 +30,34 @@ public class OrderService {
         Order order = new Order();
         order.setId(java.util.UUID.randomUUID().toString());
         order.setUserId(orderDTO.getUserId());
-        order.setOrderStatus(OrderStatus.OrderCheckout);
+        order.setOrderStatus(OrderStatus.OrderCreated);
 
-        orderRepository.save(order);
-
-        List<OrderProduct> orderProducts = orderDTO.getOrderProducts().stream().map(op -> {
-            Optional<Product> productOption = productRepository.findProductByProductGuid(op.getId());
-            Product product = productOption.orElse(null);
-            if (product == null) {
-                product = newProductFromOrderProductDTO(op);
-            }
+        List<OrderProduct> orderProducts = orderDTO.getOrderProducts().stream().map(product -> {
             OrderProduct orderProduct = new OrderProduct();
+            orderProduct.setProductId(product.getId());
+            orderProduct.setQuantity(product.getQuantity());
             orderProduct.setOrder(order);
-            orderProduct.setProduct(product);
-            orderProduct.setPrice(0f);
-            orderProduct.setQuantity(op.getQuantity());
-            return orderProductRepository.save(orderProduct);
+            return orderProduct;
         }).collect(Collectors.toList());
 
         order.setOrderProducts(orderProducts);
-        order.setOrderStatus(OrderStatus.OrderCreated);
         orderRepository.save(order);
+
+        try {
+            orderProducer.convertAndSendInventory();
+        } catch (Exception e) {
+            this.compensate(order.getId());
+        }
 
         return order.getId();
     }
 
-    private Product newProductFromOrderProductDTO(CartProductDTO op) {
-        Product product = new Product();
-        product.setProductGuid(op.getId());
-        this.productRepository.save(product);
-        return product;
+    public void compensate(String orderId) {
+        Optional<Order> order = orderRepository.findById(orderId);
+        if (order.isPresent()) {
+            order.get().setOrderStatus(OrderStatus.OrderCreationFailed);
+            orderRepository.save(order.get());
+        }
     }
 
     public Order getOrder(Long id) {

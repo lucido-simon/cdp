@@ -15,12 +15,12 @@ public class Order {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long tech_id;
+    private Long techId;
 
     @Column(name = "order_id", unique = true, nullable = false)
     private String id;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
     @Enumerated(EnumType.STRING)

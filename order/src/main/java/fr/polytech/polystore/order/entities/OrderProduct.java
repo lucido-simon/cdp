@@ -9,23 +9,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "order_products")
+@Table(name = "order_products", uniqueConstraints = {@UniqueConstraint(columnNames = {"order_id", "product_id"})})
 public class OrderProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
+    @Column(name = "product_id", nullable = false)
+    private String productId;
 
-    @ManyToOne
-    @JoinColumn(name = "product_guid")
-    private Product product;
-
-    @Column(name = "quantity")
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
     @Column(name = "price")
     private float price;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 }

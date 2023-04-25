@@ -6,6 +6,7 @@ public enum OrderStatus {
     OrderPrepared,
     OrderPaid,
     OrderDelivered,
+    OrderCreationFailed,
     OrderPreparingFailed,
     OrderPaymentFailed,
     OrderDeliveryFailed
