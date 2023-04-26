@@ -2,6 +2,7 @@ package fr.polytech.polystore.payment.controllers;
 
 import com.rabbitmq.client.Channel;
 import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.common.dtos.PaymentDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
 import fr.polytech.polystore.payment.service.PaymentService;
@@ -33,13 +34,14 @@ public class PaymentListener {
     public void receive(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
         try {
             Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
-            ParameterizedTypeReference<PolyStoreMessage<List<OrderDTO>>> typeRef = new ParameterizedTypeReference<>() {
+            ParameterizedTypeReference<PolyStoreMessage<OrderDTO>> typeRef = new ParameterizedTypeReference<>() {
             };
-            PolyStoreMessage<List<OrderDTO>> message = (PolyStoreMessage<List<OrderDTO>>) converter.fromMessage(payload, typeRef);
+            PolyStoreMessage<OrderDTO> message = (PolyStoreMessage<OrderDTO>) converter.fromMessage(payload, typeRef);
             logger.info("Received message: {}", message.getOrderStatus());
             logger.info("Payload: {}", message.getPayload());
 
             // TODO: Send to payment service
+            this.paymentService.createPayment(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
@@ -58,7 +60,7 @@ public class PaymentListener {
             logger.warn("Received compensation for order: {}", message.getOrderId());
             logger.debug("Payload: {}", message.getPayload());
 
-            // Compensate
+            // TODO: Compensate
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
