@@ -1,11 +1,11 @@
 package fr.polytech.polystore.payment.repositories;
-import fr.polytech.polystore.payment.entities.Stock;
+import fr.polytech.polystore.payment.entities.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface StockRepository extends JpaRepository<Stock, Long> {
-    Optional<Stock> findStockById(String id);
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
+    Optional<Payment> findPaymentById(String id);
 }
