@@ -23,6 +23,9 @@ public class Order {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @Column(name = "payment_id", unique = true)
+    private String paymentId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false)
     private OrderStatus orderStatus;

@@ -2,6 +2,7 @@ package fr.polytech.polystore.order.controllers;
 
 import com.rabbitmq.client.Channel;
 import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.common.dtos.PaymentDTO;
 import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
@@ -31,6 +32,43 @@ public class OrderListener {
     private OrderService orderService;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderListener.class);
+    @RabbitListener(queues = "${payment.order.compensation.queue}")
+    public void receiveCompensatePayment(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
+        try {
+            Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
+            ParameterizedTypeReference<PolyStoreMessage<OrderStatus>> typeRef = new ParameterizedTypeReference<>() {
+            };
+            PolyStoreMessage<OrderStatus> message = (PolyStoreMessage<OrderStatus>) converter.fromMessage(payload, typeRef);
+            logger.warn("Received compensation from payment for order: {}", message.getOrderId());
+            logger.debug("Payload: {}", message.getPayload());
+
+            orderService.paymentCompensate(message);
+
+            channel.basicAck(tag, false);
+        } catch (Exception e) {
+            channel.basicReject(tag, !redelivered);
+            throw e;
+        }
+    }
+
+    @RabbitListener(queues = "${payment.order.queue}")
+    public void receivePayment(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
+        try {
+            Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
+            ParameterizedTypeReference<PolyStoreMessage<PaymentDTO>> typeRef = new ParameterizedTypeReference<>() {
+            };
+            PolyStoreMessage<PaymentDTO> message = (PolyStoreMessage<PaymentDTO>) converter.fromMessage(payload, typeRef);
+            logger.info("Received message from payment: {}", message.getOrderStatus());
+            logger.info("Payload: {}", message.getPayload());
+
+            orderService.paymentResponse(message);
+
+            channel.basicAck(tag, false);
+        } catch (Exception e) {
+            channel.basicReject(tag, !redelivered);
+            throw e;
+        }
+    }
 
     @RabbitListener(queues = "${inventory.order.queue}")
     public void receiveInventory(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
@@ -66,7 +104,6 @@ public class OrderListener {
             channel.basicReject(tag, !redelivered);
             throw e;
         }
-
     }
 
     @RabbitListener(queues = "${cart.order.queue}")
@@ -77,7 +114,7 @@ public class OrderListener {
             };
             PolyStoreMessage<OrderDTO> message = (PolyStoreMessage<OrderDTO>) converter.fromMessage(payload, typeRef);
             logger.info("Received message: {}", message.getOrderStatus());
-            logger.info("Payload: {}", message.getPayload());
+            logger.debug("Payload: {}", message.getPayload());
 
             String id = orderService.createOrder(message.getPayload());
             channel.basicAck(tag, false);

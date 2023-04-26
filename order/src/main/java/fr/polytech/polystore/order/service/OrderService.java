@@ -2,6 +2,7 @@ package fr.polytech.polystore.order.service;
 
 import fr.polytech.polystore.common.PolystoreException;
 import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.common.dtos.PaymentDTO;
 import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
@@ -52,12 +53,12 @@ public class OrderService {
 
         try {
             orderProducer.convertAndSendInventory(orderProducts.stream().map(product -> {
-                StockDTO stockDTO = new StockDTO();
-                stockDTO.setId(product.getProductId());
-                stockDTO.setQuantity(product.getQuantity());
-                return stockDTO;
-            }).collect(Collectors.toList())
-            , order.getId(), order.getOrderStatus());
+                        StockDTO stockDTO = new StockDTO();
+                        stockDTO.setId(product.getProductId());
+                        stockDTO.setQuantity(product.getQuantity());
+                        return stockDTO;
+                    }).collect(Collectors.toList())
+                    , order.getId(), order.getOrderStatus());
         } catch (Exception e) {
             this.compensate(order.getId());
         }
@@ -106,6 +107,42 @@ public class OrderService {
     }
 
     @Transactional
+    public void paymentCompensate(PolyStoreMessage<OrderStatus> payload) {
+        logger.warn("Compensating order due to payment failure: " + payload.getOrderId());
+        try {
+            orderRepository.findById(payload.getOrderId()).ifPresentOrElse(order -> {
+                order.setOrderStatus(OrderStatus.OrderPaymentFailed);
+                orderRepository.save(order);
+            }, () -> logger.error("Order not found while compensating payment: " + payload.getOrderId()));
+
+            orderProducer.convertAndSendCompensationInventory(payload.getOrderId(), OrderStatus.OrderPreparationFailed);
+        } catch (Exception e) {
+            logger.error("Error while compensating: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public void paymentResponse(PolyStoreMessage<PaymentDTO> message) {
+        try {
+            orderRepository.findById(message.getOrderId()).ifPresentOrElse(order -> {
+                order.setOrderStatus(OrderStatus.OrderPaid);
+                order.setPaymentId(message.getPayload().getId());
+                orderRepository.save(order);
+
+                // TODO: Send to shipping
+            }, () -> logger.error("Order {} not found while handling payment", message.getOrderId()));
+        } catch (Exception e) {
+            logger.error("Error while handling payment for order {}: {}", message.getOrderId(), e.getMessage());
+
+            Order order = orderRepository.findById(message.getOrderId()).get();
+            order.setOrderStatus(OrderStatus.OrderPaymentFailed);
+            orderRepository.save(order);
+
+            logger.error("Compensating...");
+            this.orderProducer.convertAndSendCompensationPayment(message.getOrderId(), OrderStatus.OrderPaymentFailed);
+        }
+    }
+
     public void inventoryCompensate(PolyStoreMessage<OrderStatus> payload) {
         logger.warn("Compensating inventory for order: " + payload.getOrderId());
         try {
@@ -113,8 +150,6 @@ public class OrderService {
                 order.setOrderStatus(OrderStatus.OrderPreparationFailed);
                 orderRepository.save(order);
             }, () -> logger.error("Order not found while compensating inventory: " + payload.getOrderId()));
-
-            orderProducer.convertAndSendCompensationInventory(payload.getOrderId(), OrderStatus.OrderPreparationFailed);
         } catch (Exception e) {
             logger.error("Error while compensating inventory: " + e.getMessage());
         }
