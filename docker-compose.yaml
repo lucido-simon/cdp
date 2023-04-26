@@ -10,7 +10,7 @@ services:
     ports:
       - "6379:6379"
 
-  postgres:
+  postgres-order:
     image: postgres
     ports:
       - "5432:5432"
@@ -24,6 +24,16 @@ services:
     image: postgres
     ports:
       - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: polystore
+      PGDATA: ./data/db/postgres
+
+  postgres-payment:
+    image: postgres
+    ports:
+      - "5434:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
