@@ -1,13 +1,16 @@
 package fr.polytech.polystore.order.service;
 
-import fr.polytech.polystore.common.dtos.CartProductDTO;
 import fr.polytech.polystore.common.dtos.OrderDTO;
 import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
+import fr.polytech.polystore.common.models.PolyStoreMessage;
 import fr.polytech.polystore.order.entities.Order;
 import fr.polytech.polystore.order.entities.OrderProduct;
 import fr.polytech.polystore.order.repositories.OrderProductRepository;
 import fr.polytech.polystore.order.repositories.OrderRepository;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +20,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     @Autowired
     private OrderProducer orderProducer;
@@ -77,5 +82,41 @@ public class OrderService {
 
     public List<Order> getOrdersByUserId(Long userId) {
         return orderRepository.findByUserId(userId);
+    }
+
+    @Transactional
+    public void inventoryResponse(PolyStoreMessage<List<StockDTO>> payload) {
+        logger.info("Inventory response for order: " + payload.getOrderId());
+        payload.getPayload().forEach(stockDTO -> {
+            Optional<OrderProduct> orderProduct = orderProductRepository.findOrderProductByProductIdAndOrderId(stockDTO.getId(), payload.getOrderId());
+            if (orderProduct.isPresent()) {
+                orderProduct.get().setQuantity(stockDTO.getQuantity());
+                orderProductRepository.save(orderProduct.get());
+            } else {
+                logger.error("Order product not found: " + stockDTO.getId());
+            }
+        });
+        // Safe since we know it exists due to SQL constraint and above code
+        Order order = orderRepository.findById(payload.getOrderId()).get();
+        order.setOrderStatus(OrderStatus.OrderPrepared);
+
+            // TODO: Send to payment
+
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void inventoryCompensate(PolyStoreMessage<OrderStatus> payload) {
+        logger.warn("Compensating inventory for order: " + payload.getOrderId());
+        try {
+            orderRepository.findById(payload.getOrderId()).ifPresentOrElse(order -> {
+                order.setOrderStatus(OrderStatus.OrderPreparationFailed);
+                orderRepository.save(order);
+            }, () -> logger.error("Order not found while compensating inventory: " + payload.getOrderId()));
+
+            orderProducer.convertAndSendCompensationInventory(payload.getOrderId(), OrderStatus.OrderPreparationFailed);
+        } catch (Exception e) {
+            logger.error("Error while compensating inventory: " + e.getMessage());
+        }
     }
 }
