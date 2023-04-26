@@ -12,7 +12,7 @@
 	<artifactId>order</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>order</name>
-	<description>Cart for PolyStore</description>
+	<description>Order for PolyStore</description>
 	<properties>
 		<java.version>19</java.version>
 	</properties>
