@@ -7,10 +7,8 @@ import fr.polytech.polystore.cart.repositories.CartRepository;
 import fr.polytech.polystore.common.PolystoreException;
 import fr.polytech.polystore.common.dtos.CartProductDTO;
 import fr.polytech.polystore.common.dtos.OrderDTO;
+import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.grpc.CatalogServiceGrpc;
-import fr.polytech.polystore.common.grpc.GetProductRequestGRPC;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +32,7 @@ public class CartService {
         if (cart == null) {
             return null;
         }
-        return this.CartToCartDTO(cart);
+        return this.cartToCartDTO(cart);
     }
 
     public void addProduct(CartProductDTO createProductDTO) throws PolystoreException.NotFound {
@@ -70,7 +68,7 @@ public class CartService {
             return null;
         }
 
-        OrderDTO order = this.CartToOrderDTO(cart);
+        OrderDTO order = this.cartToOrderDTO(cart);
 
         try {
             return this.cartProducer.send(order);
@@ -79,11 +77,13 @@ public class CartService {
         }
     }
 
-    private CartDTO CartToCartDTO(Cart cart) {
+    private CartDTO cartToCartDTO(Cart cart) {
         return new CartDTO(cart.getProducts());
     }
 
-    private OrderDTO CartToOrderDTO(Cart cart) {
-        return new OrderDTO("1", "1" , cart.getProducts());
+    private OrderDTO cartToOrderDTO(Cart cart) {
+        return new OrderDTO(null, "1", null, cart.getProducts().stream().map(
+                product -> new StockDTO(product.getId(), null, product.getQuantity())
+        ).toList());
     }
 }

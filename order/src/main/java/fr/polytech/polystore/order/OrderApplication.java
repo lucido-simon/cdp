@@ -12,9 +12,7 @@ import org.springframework.context.annotation.PropertySources;
 public class OrderApplication {
 
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(OrderApplication.class);
-        app.setWebApplicationType(WebApplicationType.NONE);
-        app.run(args);
+        SpringApplication.run(OrderApplication.class);
     }
 
 }

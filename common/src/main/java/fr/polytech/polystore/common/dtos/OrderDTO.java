@@ -1,5 +1,6 @@
 package fr.polytech.polystore.common.dtos;
 
+import fr.polytech.polystore.common.models.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import java.util.List;
 public class OrderDTO {
     private String id;
     private String userId;
-    private List<CartProductDTO> orderProducts;
+    private OrderStatus orderStatus;
+    private List<StockDTO> orderProducts;
 }
 

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StockDTO {
     private String id;
-    private double price;
+    private Double price;
     private int quantity;
 }
 

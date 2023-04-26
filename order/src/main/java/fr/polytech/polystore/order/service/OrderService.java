@@ -1,5 +1,6 @@
 package fr.polytech.polystore.order.service;
 
+import fr.polytech.polystore.common.PolystoreException;
 import fr.polytech.polystore.common.dtos.OrderDTO;
 import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
@@ -72,16 +73,16 @@ public class OrderService {
         }
     }
 
-    public Order getOrder(Long id) {
-        return orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found: " + id));
+    public OrderDTO getOrder(String id) throws PolystoreException.NotFound {
+        return this.orderToOrderDTO(orderRepository.findById(id).orElseThrow(() -> new PolystoreException.NotFound("Order not found: " + id)));
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<OrderDTO> getAllOrders() {
+        return orderRepository.findAll().stream().map(this::orderToOrderDTO).collect(Collectors.toList());
     }
 
-    public List<Order> getOrdersByUserId(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public List<OrderDTO> getOrdersByUserId(Long userId) {
+        return orderRepository.findByUserId(userId).stream().map(this::orderToOrderDTO).collect(Collectors.toList());
     }
 
     @Transactional
@@ -118,5 +119,20 @@ public class OrderService {
         } catch (Exception e) {
             logger.error("Error while compensating inventory: " + e.getMessage());
         }
+    }
+
+    private OrderDTO orderToOrderDTO(Order order) {
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setId(order.getId());
+        orderDTO.setUserId(order.getUserId());
+        orderDTO.setOrderStatus(order.getOrderStatus());
+        orderDTO.setOrderProducts(order.getOrderProducts().stream().map(orderProduct -> {
+            StockDTO orderProductDTO = new StockDTO();
+            orderProductDTO.setId(orderProduct.getProductId());
+            orderProductDTO.setQuantity(orderProduct.getQuantity());
+            orderProductDTO.setPrice((double) orderProduct.getPrice());
+            return orderProductDTO;
+        }).collect(Collectors.toList()));
+        return orderDTO;
     }
 }
