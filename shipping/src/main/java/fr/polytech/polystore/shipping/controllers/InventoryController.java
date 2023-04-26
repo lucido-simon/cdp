@@ -1,7 +1,7 @@
-package fr.polytech.polystore.inventory.controllers;
+package fr.polytech.polystore.shipping.controllers;
 
-import fr.polytech.polystore.inventory.dtos.StockDTO;
-import fr.polytech.polystore.inventory.service.InventoryService;
+import fr.polytech.polystore.shipping.dtos.StockDTO;
+import fr.polytech.polystore.shipping.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

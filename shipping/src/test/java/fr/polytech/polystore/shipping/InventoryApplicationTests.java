@@ -1,4 +1,4 @@
-package fr.polytech.polystore.inventory;
+package fr.polytech.polystore.shipping;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

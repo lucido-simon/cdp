@@ -1,9 +1,9 @@
-package fr.polytech.polystore.inventory.service;
+package fr.polytech.polystore.shipping.service;
 
 
-import fr.polytech.polystore.inventory.dtos.StockDTO;
-import fr.polytech.polystore.inventory.entities.Stock;
-import fr.polytech.polystore.inventory.repositories.StockRepository;
+import fr.polytech.polystore.shipping.dtos.StockDTO;
+import fr.polytech.polystore.shipping.entities.Stock;
+import fr.polytech.polystore.shipping.repositories.StockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.stereotype.Service;

@@ -1,5 +1,5 @@
-package fr.polytech.polystore.inventory.repositories;
-import fr.polytech.polystore.inventory.entities.Stock;
+package fr.polytech.polystore.shipping.repositories;
+import fr.polytech.polystore.shipping.entities.Stock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

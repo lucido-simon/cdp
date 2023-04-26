@@ -1,4 +1,4 @@
-package fr.polytech.polystore.inventory;
+package fr.polytech.polystore.shipping;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

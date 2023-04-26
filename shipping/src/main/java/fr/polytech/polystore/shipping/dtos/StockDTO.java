@@ -1,6 +1,6 @@
-package fr.polytech.polystore.inventory.dtos;
+package fr.polytech.polystore.shipping.dtos;
 
-import fr.polytech.polystore.inventory.entities.Stock;
+import fr.polytech.polystore.shipping.entities.Stock;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
