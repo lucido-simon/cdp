@@ -100,10 +100,9 @@ public class OrderService {
         // Safe since we know it exists due to SQL constraint and above code
         Order order = orderRepository.findById(payload.getOrderId()).get();
         order.setOrderStatus(OrderStatus.OrderPrepared);
-
-            // TODO: Send to payment
-
         orderRepository.save(order);
+
+        orderProducer.convertAndSendPayment(orderToOrderDTO(order));
     }
 
     @Transactional
