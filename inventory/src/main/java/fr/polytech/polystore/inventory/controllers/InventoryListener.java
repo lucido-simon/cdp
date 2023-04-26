@@ -3,6 +3,7 @@ package fr.polytech.polystore.inventory.controllers;
 import com.rabbitmq.client.Channel;
 import fr.polytech.polystore.common.PolystoreException;
 import fr.polytech.polystore.common.dtos.StockDTO;
+import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
 import fr.polytech.polystore.inventory.service.InventoryService;
 import org.slf4j.Logger;
@@ -51,8 +52,21 @@ public class InventoryListener {
     }
 
     @RabbitListener(queues = "${order.inventory.compensation.queue}")
-    public void compensate(String payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
-        System.out.println("Compensating <" + payload + ">" + tag);
-        channel.basicAck(tag, false);
+    public void compensate(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException, PolystoreException.NotFound {
+        try {
+            Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
+            ParameterizedTypeReference<PolyStoreMessage<OrderStatus>> typeRef = new ParameterizedTypeReference<>() {
+            };
+            PolyStoreMessage<OrderStatus> message = (PolyStoreMessage<OrderStatus>) converter.fromMessage(payload, typeRef);
+            logger.info("Received compensation message: {}", message.getOrderStatus());
+            logger.debug("Payload: {}", message.getPayload());
+
+            inventoryService.compensate(message);
+
+            channel.basicAck(tag, false);
+        } catch (Exception e) {
+            channel.basicReject(tag, !redelivered);
+            throw e;
+        }
     }
 }

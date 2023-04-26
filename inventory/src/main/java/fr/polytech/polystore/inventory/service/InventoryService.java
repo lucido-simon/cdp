@@ -10,6 +10,8 @@ import fr.polytech.polystore.inventory.entities.Stock;
 import fr.polytech.polystore.inventory.repositories.OrderStockRepository;
 import fr.polytech.polystore.inventory.repositories.StockRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class InventoryService {
+    private static final Logger logger = LoggerFactory.getLogger(InventoryService.class);
 
     @Autowired
     private StockRepository stockRepository;
@@ -76,7 +79,28 @@ public class InventoryService {
 
             this.inventoryProducer.send(stocks, order.getOrderId());
         } catch (Exception e) {
+            logger.error("Could not remove stock for order {}: {}", order.getOrderId(), e.getMessage());
             this.failure(order);
+        }
+    }
+
+    @Transactional
+    public void compensate(PolyStoreMessage<OrderStatus> message) {
+        String orderId = message.getOrderId();
+        try {
+            List<OrderStock> orderStocks = this.orderStockRepository.findAllByOrderId(orderId);
+            for (OrderStock orderStock : orderStocks) {
+                try {
+                    Stock stock = orderStock.getStock();
+                    stock.setQuantity(stock.getQuantity() + orderStock.getQuantity());
+                    this.stockRepository.save(stock);
+                    this.orderStockRepository.delete(orderStock);
+                } catch (Exception e) {
+                    logger.error("Could not compensate stock {} for order {}: {}", orderStock.getProductId(), orderId, e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Could not compensate order {}: {}", orderId, e.getMessage());
         }
     }
 
@@ -91,5 +115,4 @@ public class InventoryService {
         stockDTO.setQuantity(stock.getQuantity());
         return stockDTO;
     }
-
 }
