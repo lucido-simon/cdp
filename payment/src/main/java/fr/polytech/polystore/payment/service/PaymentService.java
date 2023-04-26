@@ -73,6 +73,24 @@ public class PaymentService {
         }
     }
 
+    @Transactional
+    public void compensatePayment(PolyStoreMessage<OrderStatus> message) {
+        logger.warn("Compensating payment for order {}", message.getOrderId());
+        this.paymentRepository.findPaymentByOrderId(message.getOrderId()).ifPresentOrElse(
+                payment -> {
+                    if (payment.getPaymentStatus() == PaymentStatus.PaymentSucceeded) {
+                        Payment refund = new Payment();
+                        refund.setId(java.util.UUID.randomUUID().toString());
+                        refund.setOrderId(payment.getOrderId());
+                        refund.setPrice(-payment.getPrice());
+                        refund.setPaymentStatus(PaymentStatus.PaymentSucceeded);
+                        this.paymentRepository.save(refund);
+                    }
+                },
+                () -> logger.error("Payment not found for order {}", message.getOrderId())
+        );
+    }
+
     private void failure(Payment payment) {
         payment.setPaymentStatus(PaymentStatus.PaymentFailed);
         paymentRepository.save(payment);
