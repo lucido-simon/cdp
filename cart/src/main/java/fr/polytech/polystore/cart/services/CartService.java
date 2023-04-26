@@ -38,14 +38,6 @@ public class CartService {
     }
 
     public void addProduct(CartProductDTO createProductDTO) throws PolystoreException.NotFound {
-        try {
-            this.blockingStub.getProduct(GetProductRequestGRPC.newBuilder().setId(createProductDTO.getId()).build());
-        } catch (StatusRuntimeException e) {
-            if (e.getStatus().getCode().equals(Status.NOT_FOUND.getCode())) {
-                throw new PolystoreException.NotFound("Product not found");
-            }
-        }
-
         Cart cart = this.cartRepository.findById("1").orElse(null);
         if (cart == null) {
             cart = new Cart("1", new ArrayList<>());
@@ -57,8 +49,8 @@ public class CartService {
         }
         cart.getProducts()
                 .stream()
-                .findFirst()
                 .filter(product -> product.getId().equals(createProductDTO.getId()))
+                .findFirst()
                 .ifPresentOrElse(product -> {
                     int finalQuantity = product.getQuantity() + createProductDTO.getQuantity();
                     if (finalQuantity > 0 ) {
