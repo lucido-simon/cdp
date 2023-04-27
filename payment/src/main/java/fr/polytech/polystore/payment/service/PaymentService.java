@@ -65,6 +65,7 @@ public class PaymentService {
         try {
             payment.setPaymentStatus(PaymentStatus.PaymentSucceeded);
             this.paymentRepository.save(payment);
+            logger.info("Payment succeeded for order {}", message.getOrderId());
             paymentProducer.convertAndSend(paymentToPaymentDTO(payment), message.getOrderId(), OrderStatus.OrderPaid);
         }
         catch (Exception e) {

@@ -44,7 +44,7 @@ public class ShipmentService {
             shipment.setShipmentStatus(ShipmentStatus.Delivering);
             this.shipmentRepository.save(shipment);
             logger.info("Shipment created for order {}", orderDTO.getId());
-
+            shipmentProducer.convertAndSend(shipmentToShipmentDTO(shipment), orderDTO.getId(), OrderStatus.OrderDelivering);
         } catch (Exception e) {
             logger.error("Error while creating shipment for order {}: {}", orderDTO.getId(), e.getMessage());
             shipmentProducer.convertAndSendCompensation(orderDTO.getId(), OrderStatus.OrderDeliveryFailed);
@@ -62,6 +62,7 @@ public class ShipmentService {
         try {
             shipment.setShipmentStatus(ShipmentStatus.Delivered);
             this.shipmentRepository.save(shipment);
+logger.info("Shipment delivered for order {}", orderDTO.getId());
             shipmentProducer.convertAndSend(shipmentToShipmentDTO(shipment), orderDTO.getId(), OrderStatus.OrderDelivered);
         }
         catch (Exception e) {
