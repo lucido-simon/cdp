@@ -111,6 +111,22 @@ public class OrderService {
             }
         }
     }
+
+    @Transactional
+    public void shippingCompensate(PolyStoreMessage<OrderStatus> payload) {
+        logger.warn("Compensating order due to shipping failure: " + payload.getOrderId());
+        try {
+            orderRepository.findById(payload.getOrderId()).ifPresentOrElse(order -> {
+                order.setOrderStatus(OrderStatus.OrderDeliveryFailed);
+                orderRepository.save(order);
+            }, () -> logger.error("Order not found while compensating shipping: " + payload.getOrderId()));
+
+            orderProducer.convertAndSendCompensationPayment(payload.getOrderId(), OrderStatus.OrderDeliveryFailed);
+        } catch (Exception e) {
+            logger.error("Error while compensating: " + e.getMessage());
+        }
+    }
+
     @Transactional
     public void inventoryResponse(PolyStoreMessage<List<StockDTO>> payload) {
         logger.info("Inventory response for order: " + payload.getOrderId());
