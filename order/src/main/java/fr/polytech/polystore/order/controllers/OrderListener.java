@@ -53,25 +53,24 @@ public class OrderListener {
         }
     }
 
-//    @RabbitListener(queues = "${shipping.order.queue}")
-//    public void receiveShipping(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
-//        try {
-//            Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
-//            ParameterizedTypeReference<PolyStoreMessage<ShipmentDTO>> typeRef = new ParameterizedTypeReference<>() {
-//            };
-//            PolyStoreMessage<ShipmentDTO> message = (PolyStoreMessage<ShipmentDTO>) converter.fromMessage(payload, typeRef);
-//            logger.info("Received message from shipment: {}", message.getOrderStatus());
-//            logger.info("Payload: {}", message.getPayload());
-//
-//            // TODO: update order status
-//            orderService.shippingResponse(message);
-//
-//            channel.basicAck(tag, false);
-//        } catch (Exception e) {
-//            channel.basicReject(tag, !redelivered);
-//            throw e;
-//        }
-//    }
+    @RabbitListener(queues = "${shipping.order.queue}")
+    public void receiveShipping(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
+        try {
+            Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
+            ParameterizedTypeReference<PolyStoreMessage<ShipmentDTO>> typeRef = new ParameterizedTypeReference<>() {
+            };
+            PolyStoreMessage<ShipmentDTO> message = (PolyStoreMessage<ShipmentDTO>) converter.fromMessage(payload, typeRef);
+            logger.info("Received message from shipment: {}", message.getOrderStatus());
+            logger.info("Payload: {}", message.getPayload());
+
+            orderService.shippingResponse(message);
+
+            channel.basicAck(tag, false);
+        } catch (Exception e) {
+            channel.basicReject(tag, !redelivered);
+            throw e;
+        }
+    }
     @RabbitListener(queues = "${payment.order.compensation.queue}")
     public void receiveCompensatePayment(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
         try {

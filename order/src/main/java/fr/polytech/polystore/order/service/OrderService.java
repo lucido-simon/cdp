@@ -87,21 +87,30 @@ public class OrderService {
         return orderRepository.findByUserId(userId).stream().map(this::orderToOrderDTO).collect(Collectors.toList());
     }
 
-//    @Transactional
-//    public void shippingResponse(PolyStoreMessage<ShipmentDTO> message) {
-//        logger.info("Shipping response for order: " + message.getOrderId());
-//        ShipmentDTO shipping = message.getPayload();
-//
-//        try {
-//            orderRepository.findById(message.getOrderId()).ifPresentOrElse(order -> {
-//                order.setOrderStatus(OrderStatus.OrderDelivered);
-//                order.setShipmentId(shipping.getId());
-//                orderRepository.save(order);
-//            }, () -> logger.error("Order not found while handling shipping: " + message.getOrderId()))
-//        } catch (Exception e) {
-//
-//        }
-//    }
+    @Transactional
+    public void shippingResponse(PolyStoreMessage<ShipmentDTO> message) {
+        logger.info("Shipping response for order: " + message.getOrderId());
+        ShipmentDTO shipping = message.getPayload();
+        try {
+            orderRepository.findById(message.getOrderId()).ifPresentOrElse(order -> {
+                order.setOrderStatus(message.getOrderStatus());
+                if (message.getOrderStatus() == OrderStatus.OrderDelivering) {
+                    order.setShippingId(message.getPayload().getId());
+                    orderRepository.save(order);
+                } else {
+                    orderRepository.save(order);
+                    logger.info("Success ! Order: " + message.getOrderId() + " has been delivered");
+                }
+            }, () -> logger.error("Order not found while handling shipping: " + message.getOrderId()));
+        } catch (Exception e) {
+            logger.error("Error while handling shipping: " + e.getMessage());
+            if (message.getOrderStatus() == OrderStatus.OrderDelivering) {
+                orderProducer.convertAndSendCompensationShipping(message.getOrderId(), OrderStatus.OrderDeliveryFailed);
+            } else {
+                logger.error("Error while handling successful shipping: " + e.getMessage());
+            }
+        }
+    }
     @Transactional
     public void inventoryResponse(PolyStoreMessage<List<StockDTO>> payload) {
         logger.info("Inventory response for order: " + payload.getOrderId());

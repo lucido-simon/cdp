@@ -49,6 +49,7 @@ public class OrderProducer {
     public void convertAndSendCompensationShipping(String orderId, OrderStatus orderStatus) {
         logger.info("Sending compensation to shipping for {}", orderId);
         this.template.convertAndSend(orderShippingCompensationQueue.getName(), new PolyStoreMessage<OrderStatus>(orderId, orderStatus, orderStatus));
+        this.convertAndSendCompensationPayment(orderId, orderStatus);
     }
 
     public void convertAndSendInventory(List<StockDTO> stocks, String orderId, OrderStatus orderStatus) {
