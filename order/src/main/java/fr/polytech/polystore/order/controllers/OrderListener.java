@@ -7,7 +7,7 @@ import fr.polytech.polystore.common.dtos.ShipmentDTO;
 import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
-import fr.polytech.polystore.order.service.OrderService;
+import fr.polytech.polystore.order.service.OrderCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -30,7 +30,7 @@ public class OrderListener {
     private MessageConverter messageConverter;
 
     @Autowired
-    private OrderService orderService;
+    private OrderCommand orderCommand;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderListener.class);
     @RabbitListener(queues = "${shipping.order.compensation.queue}")
@@ -44,7 +44,7 @@ public class OrderListener {
             logger.warn("Received compensation from shipping for order: {}", message.getOrderId());
             logger.debug("Payload: {}", message.getPayload());
 
-            orderService.shippingCompensate(message);
+            orderCommand.shippingCompensate(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
@@ -61,9 +61,9 @@ public class OrderListener {
             };
             PolyStoreMessage<ShipmentDTO> message = (PolyStoreMessage<ShipmentDTO>) converter.fromMessage(payload, typeRef);
             logger.info("Received message from shipment: {}", message.getOrderStatus());
-            logger.info("Payload: {}", message.getPayload());
+            logger.debug("Payload: {}", message.getPayload());
 
-            orderService.shippingResponse(message);
+            orderCommand.shppingUpdate(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
@@ -81,7 +81,7 @@ public class OrderListener {
             logger.warn("Received compensation from payment for order: {}", message.getOrderId());
             logger.debug("Payload: {}", message.getPayload());
 
-            orderService.paymentCompensate(message);
+            orderCommand.paymentCompensate(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
@@ -98,9 +98,9 @@ public class OrderListener {
             };
             PolyStoreMessage<PaymentDTO> message = (PolyStoreMessage<PaymentDTO>) converter.fromMessage(payload, typeRef);
             logger.info("Received message from payment: {}", message.getOrderStatus());
-            logger.info("Payload: {}", message.getPayload());
+            logger.debug("Payload: {}", message.getPayload());
 
-            orderService.paymentResponse(message);
+            orderCommand.updatePayment(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
@@ -117,9 +117,9 @@ public class OrderListener {
             };
             PolyStoreMessage<List<StockDTO>> message = (PolyStoreMessage<List<StockDTO>>) converter.fromMessage(payload, typeRef);
             logger.info("Received message: {}", message.getOrderStatus());
-            logger.info("Payload: {}", message.getPayload());
+            logger.debug("Payload: {}", message.getPayload());
 
-            orderService.inventoryResponse(message);
+            orderCommand.updateProducts(message);
             channel.basicAck(tag, false);
         } catch (Exception e) {
             channel.basicReject(tag, !redelivered);
@@ -137,7 +137,7 @@ public class OrderListener {
             logger.warn("Received compensation from inventory for order: {}", message.getOrderId());
             logger.debug("Payload: {}", message.getPayload());
 
-            orderService.inventoryCompensate(message);
+            orderCommand.inventoryCompensate(message);
             channel.basicAck(tag, false);
         } catch (Exception e) {
             channel.basicReject(tag, !redelivered);
@@ -155,7 +155,7 @@ public class OrderListener {
             logger.info("Received message: {}", message.getOrderStatus());
             logger.debug("Payload: {}", message.getPayload());
 
-            String id = orderService.createOrder(message.getPayload());
+            String id = orderCommand.createOrder(message);
             channel.basicAck(tag, false);
             return id;
         } catch (Exception e) {

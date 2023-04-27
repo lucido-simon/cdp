@@ -2,8 +2,7 @@ package fr.polytech.polystore.order.controllers;
 
 import fr.polytech.polystore.common.PolystoreException;
 import fr.polytech.polystore.common.dtos.OrderDTO;
-import fr.polytech.polystore.order.entities.Order;
-import fr.polytech.polystore.order.service.OrderService;
+import fr.polytech.polystore.order.service.OrderQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +15,12 @@ import java.util.List;
 public class OrderController {
 
     @Autowired
-    private OrderService orderService;
+    private OrderQuery orderQuery;
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderDTO> getOrder(@PathVariable String id) {
         try {
-            OrderDTO order = orderService.getOrder(id);
+            OrderDTO order = orderQuery.getOrder(id);
             return new ResponseEntity<>(order, HttpStatus.OK);
         } catch (PolystoreException.NotFound e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -30,13 +29,13 @@ public class OrderController {
 
     @GetMapping()
     public ResponseEntity<List<OrderDTO>> getAllOrders() {
-        List<OrderDTO> orders = orderService.getAllOrders();
+        List<OrderDTO> orders = orderQuery.getAllOrders();
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 
     @GetMapping("/user/")
     public ResponseEntity<List<OrderDTO>> getOrdersByUserId(@RequestParam Long userId) {
-        List<OrderDTO> orders = orderService.getOrdersByUserId(userId);
+        List<OrderDTO> orders = orderQuery.getOrdersByUserId(userId);
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 }
