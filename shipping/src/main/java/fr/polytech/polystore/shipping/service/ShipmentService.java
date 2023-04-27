@@ -5,6 +5,7 @@ import fr.polytech.polystore.common.dtos.PaymentDTO;
 import fr.polytech.polystore.common.dtos.ShipmentDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.common.models.PaymentStatus;
+import fr.polytech.polystore.common.models.PolyStoreMessage;
 import fr.polytech.polystore.common.models.ShipmentStatus;
 import fr.polytech.polystore.shipping.entities.Shipment;
 import fr.polytech.polystore.shipping.repositories.ShipmentRepository;
@@ -68,6 +69,18 @@ public class ShipmentService {
             this.failure(shipment);
             this.shipmentProducer.convertAndSendCompensation(orderDTO.getId(), OrderStatus.OrderDeliveryFailed);
         }
+    }
+
+    @Transactional
+    public void compensateShipment(PolyStoreMessage<OrderStatus> polyStoreMessage) {
+        logger.warn("Compensating shipment for order {}", polyStoreMessage.getOrderId());
+        this.shipmentRepository.findByOrderId(polyStoreMessage.getOrderId()).ifPresentOrElse(
+                s -> {
+                    s.setShipmentStatus(ShipmentStatus.DeliveryFailed);
+                    this.shipmentRepository.save(s);
+                },
+                () -> logger.error("Shipment not found for order {}", polyStoreMessage.getOrderId())
+        );
     }
 
     private void failure(Shipment shipment) {

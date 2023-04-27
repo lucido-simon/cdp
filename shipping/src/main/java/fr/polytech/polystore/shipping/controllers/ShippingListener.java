@@ -57,7 +57,7 @@ public class ShippingListener {
             logger.warn("Received compensation for order: {}", message.getOrderId());
             logger.debug("Payload: {}", message.getPayload());
 
-            // TODO: Send compensation to shipment service
+            shipmentService.compensateShipment(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
