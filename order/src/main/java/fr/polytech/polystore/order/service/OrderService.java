@@ -129,7 +129,8 @@ public class OrderService {
                 order.setPaymentId(message.getPayload().getId());
                 orderRepository.save(order);
 
-                // TODO: Send to shipping
+                this.orderProducer.convertAndSendShipping(orderToOrderDTO(order));
+
             }, () -> logger.error("Order {} not found while handling payment", message.getOrderId()));
         } catch (Exception e) {
             logger.error("Error while handling payment for order {}: {}", message.getOrderId(), e.getMessage());

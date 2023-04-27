@@ -33,6 +33,24 @@ public class OrderProducer {
     @Autowired
     private Queue orderPaymentCompensationQueue;
 
+    @Autowired
+    private Queue orderShippingQueue;
+
+    @Autowired
+    private Queue orderShippingCompensationQueue;
+
+    public void convertAndSendShipping(OrderDTO orderDTO) {
+        logger.info("Sending to shipping for {}", orderDTO.getId());
+        PolyStoreMessage<OrderDTO> message = new PolyStoreMessage<>(orderDTO.getId(), orderDTO.getOrderStatus(), orderDTO);
+        logger.debug("Message: {}", message);
+        this.template.convertAndSend(orderShippingQueue.getName(), message);
+    }
+
+    public void convertAndSendCompensationShipping(String orderId, OrderStatus orderStatus) {
+        logger.info("Sending compensation to shipping for {}", orderId);
+        this.template.convertAndSend(orderShippingCompensationQueue.getName(), new PolyStoreMessage<OrderStatus>(orderId, orderStatus, orderStatus));
+    }
+
     public void convertAndSendInventory(List<StockDTO> stocks, String orderId, OrderStatus orderStatus) {
         logger.info("Sending to inventory for {}", orderId);
         PolyStoreMessage<List<StockDTO>> message = new PolyStoreMessage<>(orderId, orderStatus, stocks);
