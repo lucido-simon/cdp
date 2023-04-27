@@ -15,6 +15,9 @@ public class GatewayRoutesConfig {
     @Value("${payment.service.baseurl}")
     private String paymentServiceBaseUrl;
 
+    @Value("${shipping.service.baseurl}")
+    private String shippingServiceBaseUrl;
+
     @Bean
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
@@ -25,6 +28,10 @@ public class GatewayRoutesConfig {
                 .route(r -> r
                         .path("/api/v1/payments/**")
                         .uri(paymentServiceBaseUrl)
+                )
+                .route(r -> r
+                        .path("/api/v1/shipping/**")
+                        .uri(shippingServiceBaseUrl)
                 )
             .build();
     }
