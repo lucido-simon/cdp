@@ -40,6 +40,16 @@ services:
       POSTGRES_DB: polystore
       PGDATA: ./data/db/postgres
 
+  postgres-shipping:
+    image: postgres
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: polystore
+      PGDATA: ./data/db/postgres
+
   rabbitmq:
     image: 'bitnami/rabbitmq:latest'
     ports:
