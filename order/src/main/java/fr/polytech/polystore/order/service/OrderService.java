@@ -133,6 +133,7 @@ public class OrderService {
         payload.getPayload().forEach(stockDTO -> {
             Optional<OrderProduct> orderProduct = orderProductRepository.findOrderProductByProductIdAndOrderId(stockDTO.getId(), payload.getOrderId());
             if (orderProduct.isPresent()) {
+                orderProduct.get().setPrice(stockDTO.getPrice().floatValue());
                 orderProduct.get().setQuantity(stockDTO.getQuantity());
                 orderProductRepository.save(orderProduct.get());
             } else {
