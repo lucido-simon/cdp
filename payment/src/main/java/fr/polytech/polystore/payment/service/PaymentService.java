@@ -47,6 +47,7 @@ public class PaymentService {
             payment.setPaymentStatus(PaymentStatus.PaymentCreated);
             this.paymentRepository.save(payment);
             logger.info("Payment created for order {}", message.getOrderId());
+            paymentProducer.convertAndSend(paymentToPaymentDTO(payment), message.getOrderId(), OrderStatus.OrderProcessingPayment);
         } catch (Exception e) {
             logger.error("Error while creating payment for order {}: {}", message.getOrderId(), e.getMessage());
             this.paymentProducer.convertAndSendCompensation(message.getOrderId(), OrderStatus.OrderPaymentFailed);

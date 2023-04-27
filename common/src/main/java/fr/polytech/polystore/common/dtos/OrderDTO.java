@@ -13,6 +13,8 @@ import java.util.List;
 public class OrderDTO {
     private String id;
     private String userId;
+    private String paymentId;
+    private String shipmentId;
     private OrderStatus orderStatus;
     private List<StockDTO> orderProducts;
 }

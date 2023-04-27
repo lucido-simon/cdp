@@ -3,6 +3,7 @@ package fr.polytech.polystore.order.service;
 import fr.polytech.polystore.common.PolystoreException;
 import fr.polytech.polystore.common.dtos.OrderDTO;
 import fr.polytech.polystore.common.dtos.PaymentDTO;
+import fr.polytech.polystore.common.dtos.ShipmentDTO;
 import fr.polytech.polystore.common.dtos.StockDTO;
 import fr.polytech.polystore.common.models.OrderStatus;
 import fr.polytech.polystore.common.models.PolyStoreMessage;
@@ -86,6 +87,21 @@ public class OrderService {
         return orderRepository.findByUserId(userId).stream().map(this::orderToOrderDTO).collect(Collectors.toList());
     }
 
+//    @Transactional
+//    public void shippingResponse(PolyStoreMessage<ShipmentDTO> message) {
+//        logger.info("Shipping response for order: " + message.getOrderId());
+//        ShipmentDTO shipping = message.getPayload();
+//
+//        try {
+//            orderRepository.findById(message.getOrderId()).ifPresentOrElse(order -> {
+//                order.setOrderStatus(OrderStatus.OrderDelivered);
+//                order.setShipmentId(shipping.getId());
+//                orderRepository.save(order);
+//            }, () -> logger.error("Order not found while handling shipping: " + message.getOrderId()))
+//        } catch (Exception e) {
+//
+//        }
+//    }
     @Transactional
     public void inventoryResponse(PolyStoreMessage<List<StockDTO>> payload) {
         logger.info("Inventory response for order: " + payload.getOrderId());
@@ -125,12 +141,14 @@ public class OrderService {
     public void paymentResponse(PolyStoreMessage<PaymentDTO> message) {
         try {
             orderRepository.findById(message.getOrderId()).ifPresentOrElse(order -> {
-                order.setOrderStatus(OrderStatus.OrderPaid);
-                order.setPaymentId(message.getPayload().getId());
-                orderRepository.save(order);
-
-                this.orderProducer.convertAndSendShipping(orderToOrderDTO(order));
-
+                order.setOrderStatus(message.getOrderStatus());
+                if (message.getOrderStatus() == OrderStatus.OrderProcessingPayment) {
+                    order.setPaymentId(message.getPayload().getId());
+                    orderRepository.save(order);
+                } else {
+                    orderRepository.save(order);
+                    this.orderProducer.convertAndSendShipping(orderToOrderDTO(order));
+                }
             }, () -> logger.error("Order {} not found while handling payment", message.getOrderId()));
         } catch (Exception e) {
             logger.error("Error while handling payment for order {}: {}", message.getOrderId(), e.getMessage());
@@ -161,6 +179,8 @@ public class OrderService {
         orderDTO.setId(order.getId());
         orderDTO.setUserId(order.getUserId());
         orderDTO.setOrderStatus(order.getOrderStatus());
+        orderDTO.setPaymentId(order.getPaymentId());
+        orderDTO.setShipmentId(order.getShippingId());
         orderDTO.setOrderProducts(order.getOrderProducts().stream().map(orderProduct -> {
             StockDTO orderProductDTO = new StockDTO();
             orderProductDTO.setId(orderProduct.getProductId());

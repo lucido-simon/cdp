@@ -82,7 +82,7 @@ public class CartService {
     }
 
     private OrderDTO cartToOrderDTO(Cart cart) {
-        return new OrderDTO(null, "1", null, cart.getProducts().stream().map(
+        return new OrderDTO(null, "1", null, null, null, cart.getProducts().stream().map(
                 product -> new StockDTO(product.getId(), null, product.getQuantity())
         ).toList());
     }
