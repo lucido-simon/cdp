@@ -6,6 +6,10 @@ import fr.polytech.polystore.common.models.PolyStoreMessage;
 public class PolyStoreEvent<T> extends PolyStoreMessage<T> {
     private PolyStoreEventType eventType;
 
+    public PolyStoreEvent() {
+        super();
+    }
+
     public PolyStoreEvent(PolyStoreEventType eventType, PolyStoreMessage<T> message) {
         super(message.getOrderId(), message.getOrderStatus(), message.getPayload());
         this.eventType = eventType;

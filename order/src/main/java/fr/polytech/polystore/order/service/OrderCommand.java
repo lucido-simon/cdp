@@ -1,6 +1,8 @@
 package fr.polytech.polystore.order.service;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.polytech.polystore.common.dtos.OrderDTO;
 import fr.polytech.polystore.common.dtos.PaymentDTO;
 import fr.polytech.polystore.common.dtos.ShipmentDTO;
@@ -14,22 +16,25 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class OrderCommand {
     private static final Logger logger = LoggerFactory.getLogger(OrderCommand.class);
 
+    @Value("${order.cqrs.topic}")
+    private String ORDER_CQRS_TOPIC;
+
     @Autowired
     private OrderProducer orderProducer;
 
     @Autowired
-    private RabbitTemplate template;
-
-    @Autowired
-    private Queue orderCQRSQueue;
+    private KafkaTemplate<String, String> kafkaTemplate;
 
 
     public String createOrder(PolyStoreMessage<OrderDTO> event) {
@@ -54,12 +59,12 @@ public class OrderCommand {
 
     public void updateProducts(PolyStoreMessage<List<StockDTO>> event) {
         logger.info("Inventory event for order: " + event.getOrderId());
-        event.setOrderStatus(OrderStatus.OrderPrepared);
         OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderStatus(OrderStatus.OrderPrepared);
         orderDTO.setId(event.getOrderId());
         orderDTO.setOrderProducts(event.getPayload());
 
-        this.sendEvent(new PolyStoreEvent<>(PolyStoreEventType.CreateOrder, event));
+        this.sendEvent(new PolyStoreEvent<>(PolyStoreEventType.UpdateProducts, event));
 
         orderProducer.convertAndSendPayment(orderDTO);
     }
@@ -88,7 +93,13 @@ public class OrderCommand {
     }
 
     private void sendEvent(PolyStoreEvent<?> event) {
-        this.template.convertAndSend(orderCQRSQueue.getName(), event);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            String json = objectMapper.writeValueAsString(event);
+            this.kafkaTemplate.send(ORDER_CQRS_TOPIC, json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     public void shippingCompensate(PolyStoreMessage<OrderStatus> message) {
