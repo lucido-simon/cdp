@@ -14,6 +14,7 @@ import fr.polytech.polystore.order.repositories.OrderRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +25,9 @@ import java.util.stream.Collectors;
 public class OrderQuery {
     private static final Logger logger = LoggerFactory.getLogger(OrderQuery.class);
     @Autowired
-    private OrderRepository orderRepository;
+    private MessageConverter messageConverter;
     @Autowired
-    private OrderProductRepository orderProductRepository;
+    private OrderRepository orderRepository;
 
     public OrderDTO getOrder(String id) throws PolystoreException.NotFound {
         return this.orderToOrderDTO(orderRepository.findById(id).orElseThrow(() -> new PolystoreException.NotFound("Order not found: " + id)));
