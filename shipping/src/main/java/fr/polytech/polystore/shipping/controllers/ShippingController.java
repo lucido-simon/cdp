@@ -1,5 +1,6 @@
 package fr.polytech.polystore.shipping.controllers;
 
+import fr.polytech.polystore.common.dtos.ShipmentDTO;
 import fr.polytech.polystore.shipping.service.ShipmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,4 +20,9 @@ public class ShippingController {
 
     @Autowired
     private ShipmentService shipmentService;
+
+    @GetMapping()
+    public ResponseEntity<List<ShipmentDTO>> getAllShipments() {
+        return new ResponseEntity<>(this.shipmentService.getAllShipments(), HttpStatus.OK);
+    }
 }

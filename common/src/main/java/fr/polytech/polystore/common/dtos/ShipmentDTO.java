@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ShipmentDTO {
     private String id;
-    private String shipmentId;
+    private String orderId;
     private ShipmentStatus shipmentStatus;
 }
