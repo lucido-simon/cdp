@@ -38,7 +38,7 @@ public class ShippingListener {
             logger.info("Received message: {}", message.getOrderStatus());
             logger.info("Payload: {}", message.getPayload());
 
-            // TODO: Send to shipment service
+            shipmentService.createShipment(message.getPayload());
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
