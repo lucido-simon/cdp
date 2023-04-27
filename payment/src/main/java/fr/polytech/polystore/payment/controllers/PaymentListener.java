@@ -50,7 +50,7 @@ public class PaymentListener {
         }
     }
 
-    @RabbitListener(queues = "${order.inventory.compensation.queue}")
+    @RabbitListener(queues = "${order.payment.compensation.queue}")
     public void compensate(@Payload Message payload, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag, @Header(AmqpHeaders.REDELIVERED) boolean redelivered) throws IOException {
         try {
             Jackson2JsonMessageConverter converter = (Jackson2JsonMessageConverter) messageConverter;
