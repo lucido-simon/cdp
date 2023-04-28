@@ -62,10 +62,16 @@ public class OrderQuery {
                 };
                 this.updateShipping(objectMapper.readValue(message, qualifiedTypeRef));
             }
+            case UpdateStatus -> {
+                TypeReference<PolyStoreEvent<OrderStatus>> qualifiedTypeRef = new TypeReference<>() {
+                };
+                this.updateStatus(objectMapper.readValue(message, qualifiedTypeRef));
+            }
             default -> logger.error("Unknown event type: {}", polyStoreEvent.getEventType());
         }
 
     }
+
 
     public OrderDTO getOrder(String id) throws PolystoreException.NotFound {
         return this.orderToOrderDTO(orderRepository.findById(id).orElseThrow(() -> new PolystoreException.NotFound("Order not found: " + id)));
@@ -166,6 +172,21 @@ public class OrderQuery {
             } else {
                 logger.error("Error while handling successful shipping: " + e.getMessage());
             }
+        }
+    }
+
+    private void updateStatus(PolyStoreEvent<OrderStatus> orderStatusPolyStoreEvent) {
+        logger.info("Query: Updating status for {}: {}", orderStatusPolyStoreEvent.getOrderId(), orderStatusPolyStoreEvent.getPayload());
+        try {
+            this.orderRepository.findById(orderStatusPolyStoreEvent.getOrderId()).ifPresentOrElse(
+                    order -> {
+                        order.setOrderStatus(orderStatusPolyStoreEvent.getOrderStatus());
+                        orderRepository.save(order);
+                    },
+                    () -> logger.error("Query: Couldn't find order {}", orderStatusPolyStoreEvent.getOrderId())
+            );
+        } catch (Exception e) {
+            logger.error("Query: couldn't update status for {}: {}", orderStatusPolyStoreEvent.getOrderId(), e.getMessage());
         }
     }
 

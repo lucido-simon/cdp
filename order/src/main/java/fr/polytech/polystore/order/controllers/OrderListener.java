@@ -44,7 +44,7 @@ public class OrderListener {
             logger.warn("Received compensation from shipping for order: {}", message.getOrderId());
             logger.debug("Payload: {}", message.getPayload());
 
-            orderCommand.shippingCompensate(message);
+            orderCommand.handleShippingCompensate(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
@@ -63,7 +63,7 @@ public class OrderListener {
             logger.info("Received message from shipment: {}", message.getOrderStatus());
             logger.debug("Payload: {}", message.getPayload());
 
-            orderCommand.shppingUpdate(message);
+            orderCommand.shippingUpdate(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
@@ -81,7 +81,7 @@ public class OrderListener {
             logger.warn("Received compensation from payment for order: {}", message.getOrderId());
             logger.debug("Payload: {}", message.getPayload());
 
-            orderCommand.paymentCompensate(message);
+            orderCommand.handePaymentCompensate(message);
 
             channel.basicAck(tag, false);
         } catch (Exception e) {
@@ -137,7 +137,7 @@ public class OrderListener {
             logger.warn("Received compensation from inventory for order: {}", message.getOrderId());
             logger.debug("Payload: {}", message.getPayload());
 
-            orderCommand.inventoryCompensate(message);
+            orderCommand.handeInventoryCompensate(message);
             channel.basicAck(tag, false);
         } catch (Exception e) {
             channel.basicReject(tag, !redelivered);

@@ -13,14 +13,11 @@ import fr.polytech.polystore.order.models.PolyStoreEvent;
 import fr.polytech.polystore.order.models.PolyStoreEventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -82,7 +79,7 @@ public class OrderCommand {
         }
     }
 
-    public void shppingUpdate(PolyStoreMessage<ShipmentDTO> message) {
+    public void shippingUpdate(PolyStoreMessage<ShipmentDTO> message) {
         logger.info("Shipping update for order: " + message.getOrderId());
 
         this.sendEvent(new PolyStoreEvent<>(PolyStoreEventType.UpdateShipment, message));
@@ -90,6 +87,12 @@ public class OrderCommand {
         if (message.getOrderStatus() == OrderStatus.OrderDelivered) {
             logger.info("Order delivered: " + message.getOrderId());
         }
+    }
+
+    public void statusUpdate(PolyStoreMessage<OrderStatus> message) {
+        logger.info("Changing status for {}: {}", message.getOrderId(), message.getPayload());
+
+        this.sendEvent(new PolyStoreEvent<>(PolyStoreEventType.UpdateStatus, message));
     }
 
     private void sendEvent(PolyStoreEvent<?> event) {
@@ -102,12 +105,17 @@ public class OrderCommand {
         }
     }
 
-    public void shippingCompensate(PolyStoreMessage<OrderStatus> message) {
+    public void handleShippingCompensate(PolyStoreMessage<OrderStatus> message) {
+        orderProducer.convertAndSendCompensationPayment(message.getOrderId(), message.getOrderStatus());
+        this.statusUpdate(message);
     }
 
-    public void paymentCompensate(PolyStoreMessage<OrderStatus> message) {
+    public void handePaymentCompensate(PolyStoreMessage<OrderStatus> message) {
+        orderProducer.convertAndSendCompensationInventory(message.getOrderId(), message.getOrderStatus());
+        this.statusUpdate(message);
     }
 
-    public void inventoryCompensate(PolyStoreMessage<OrderStatus> message) {
+    public void handeInventoryCompensate(PolyStoreMessage<OrderStatus> message) {
+        this.statusUpdate(message);
     }
 }
