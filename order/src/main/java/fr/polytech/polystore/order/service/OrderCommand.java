@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,43 @@ public class OrderCommand {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
+
+    @KafkaListener(topics = "${order.cqrs.compensation.topic}", groupId = "order-compensation")
+    public void queryCompensation(String message) {
+        logger.info("Received compensation message: {}", message);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            PolyStoreEvent<OrderStatus> event = mapper.readValue(message, PolyStoreEvent.class);
+            switch (event.getEventType()) {
+                case CreateOrder:
+                    event.setOrderStatus(OrderStatus.OrderCreationFailed);
+                    this.statusUpdate(event);
+                    this.orderProducer.convertAndSendCompensationInventory(event.getOrderId(), OrderStatus.OrderCreationFailed);
+                    break;
+                case UpdateProducts:
+                    event.setOrderStatus(OrderStatus.OrderPreparationFailed);
+                    this.statusUpdate(event);
+                    this.orderProducer.convertAndSendCompensationInventory(event.getOrderId(), OrderStatus.OrderCreationFailed);
+                    break;
+                case UpdatePayment:
+                    event.setOrderStatus(OrderStatus.OrderPaymentFailed);
+                    this.statusUpdate(event);
+                    this.orderProducer.convertAndSendCompensationPayment(event.getOrderId(), OrderStatus.OrderPaymentFailed);
+                    break;
+                case UpdateShipment:
+                    event.setOrderStatus(OrderStatus.OrderDeliveryFailed);
+                    this.statusUpdate(event);
+                    this.orderProducer.convertAndSendCompensationShipping(event.getOrderId(), OrderStatus.OrderDeliveryFailed);
+                    break;
+                default:
+                    logger.error("Unknown event type: {}", event.getEventType());
+                    break;
+            }
+        } catch (JsonProcessingException e) {
+            logger.error("Error while parsing compensation message", e);
+        }
+    }
+
 
 
     public String createOrder(PolyStoreMessage<OrderDTO> event) {

@@ -18,7 +18,9 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -32,6 +34,12 @@ public class OrderQuery {
     private OrderRepository orderRepository;
     @Autowired
     private OrderProductRepository orderProductRepository;
+
+    @Value("${order.cqrs.compensation.topic}")
+    private String ORDER_CQRS_COMPENSATION_TOPIC;
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     @KafkaListener(topics = "${order.cqrs.topic}", groupId = "order-query")
     public void receiveEvent(String message) throws IOException {
