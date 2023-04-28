@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/v1/")
+@CrossOrigin(origins = "*")
 public class CartController {
     @Autowired
     private CartClient cartClient;
