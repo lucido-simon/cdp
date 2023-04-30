@@ -71,7 +71,10 @@ public class CartService {
         OrderDTO order = this.cartToOrderDTO(cart);
 
         try {
-            return this.cartProducer.send(order);
+            String id = this.cartProducer.send(order);
+            cart.getProducts().clear();
+            this.cartRepository.save(cart);
+            return id;
         } catch (Exception e) {
             throw new PolystoreException.Unknown(e.getMessage());
         }
