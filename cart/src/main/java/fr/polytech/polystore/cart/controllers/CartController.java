@@ -13,6 +13,7 @@ import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @GrpcService
@@ -68,6 +69,8 @@ public class CartController extends CartServiceGRPCGrpc.CartServiceGRPCImplBase 
     }
 
     private CartGRPC convertToProtoCart(CartDTO cartDTO) {
+        if (cartDTO.getProducts() == null)
+            cartDTO.setProducts(new ArrayList<>());
         return CartGRPC.newBuilder().addAllProducts(
                 cartDTO.getProducts().stream().map(this::convertToProtoProduct).collect(Collectors.toList())
         ).build();
