@@ -1,0 +1,39 @@
+# Use the official maven/Amazon Corretto 19 image to create a build artifact.
+FROM maven:3.9-amazoncorretto-19 AS build
+
+# Set the working directory.
+WORKDIR /usr/src/microservices
+
+# Copy the entire project folder.
+COPY . .
+
+# Build the cart module.
+RUN mvn clean install -pl cart -am -DskipTests
+
+# Use the official Amazon Corretto 19 alpine image for a lean production stage of our multi-stage build.
+FROM amazoncorretto:19-alpine3.17
+
+# Set the working directory.
+WORKDIR /app
+
+# Copy the built artifact from the build stage.
+COPY --from=build /usr/src/microservices/cart/target/*.jar app.jar
+
+# Set the required environment variables for the production environment.
+ENV SPRING_DATA_REDIS_DATABASE=""
+ENV SPRING_DATA_REDIS_HOST=""
+ENV SPRING_DATA_REDIS_PORT=""
+ENV SPRING_DATA_REDIS_PASSWORD=""
+ENV SPRING_DATA_REDIS_TIMEOUT=""
+ENV GRPC_CLIENT_GLOBAL_NEGOTIATION_TYPE=""
+ENV GRPC_CLIENT_CATALOG_SERVICE_ADDRESS=""
+ENV GRPC_SERVER_PORT=""
+ENV SPRING_RABBITMQ_LISTENER_SIMPLE_ACKNOWLEDGE_MODE=""
+ENV SPRING_RABBITMQ_USERNAME=""
+ENV SPRING_RABBITMQ_PASSWORD=""
+
+# Expose the port.
+EXPOSE 8083
+
+# Run the application.
+CMD ["java", "-jar", "app.jar"]
