@@ -1,0 +1,26 @@
+- name: Download & install k3d
+  ansible.builtin.shell:
+    cmd: curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+- name: Ensures /k3d dir exists
+  file: path=/k3d state=directory
+
+- name: Copy files
+  copy:
+    src: "{{ playbook_dir }}/k3d_config.yaml"
+    dest: "/k3d/k3d_config_polystore.yaml"
+
+- name: Create cluster
+  ansible.builtin.shell:
+    cmd: k3d cluster create polystore --config /k3d/k3d_config_polystore.yaml
+
+- name: Create isolated kubeconfig for the cluster
+  ansible.builtin.shell:
+    cmd: k3d kubeconfig get polystore > /k3d/polystore
+
+- name: Copy kubeconfig to ~.kube/
+  ansible.builtin.fetch:
+    src: /k3d/polystore
+    dest: ~/.kube/polystore
+    flat: yes
+

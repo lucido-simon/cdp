@@ -1,0 +1,9 @@
+---
+# Install k3s on master
+- hosts: k3d-master
+  gather_facts: yes
+  become: yes
+  become_user: root
+  roles:
+    - role: k3d/master
+
