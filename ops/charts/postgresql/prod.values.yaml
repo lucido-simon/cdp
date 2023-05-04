@@ -1,3 +1,6 @@
 auth:
   existingSecret: postgres-admin
   enablePostgresUser: true
+primary:
+  initdb:
+    scriptsSecret: postgres-initdb	
