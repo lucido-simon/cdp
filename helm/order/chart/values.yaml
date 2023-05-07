@@ -1,0 +1,97 @@
+# Default values for backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: ghcr.io/lucido-simon/order
+  pullPolicy: Always
+  tag: latest
+
+fullnameOverride: 'order'
+
+containerPort: 8082
+
+sealedSecrets:
+  postgres:
+    password: AgAlQSAG4GqLV8s3/xQkXsLpN1RhFbpa7mh1StFLtBoPBseV+1RV/xuosB9e1Vhgj51S56n12h8GPMbmTezGAEiG3HpbQ3DoMaLHESLK/bEeUvrS9aAGxPqTTQIKe9tqhQypphOTedEnSWPA9eDuINxouv4wxxUmNkqMd/FWrA8pAV0L5EUNM5hF81JYmT4u6mMmVcyAfTE7T1rBscfw9o6fOSjqSEuWVFmc1mtxzOKFDSQfQ+o9UMXszlUW6H6vs3LH9dDgps9n9DXCp/lK/Gp0aFnJuq5Mg0EHhaJ2yvpM3VocEpKaumRvL3hlutDharWF4+mkMYXY77KLmcrGMPFSWQX7nQLPm/soKnH1Ilqr1xaBJ/5NmSjfWVzT00VlGDg8Dlu2YE3wwq+P2URoLjO+QkLSa9OKBHpOOx/NUb12o7N0q+hGwasQhFSStqkbvj9iU5ZWjY0VMixyV1kYykiaUwIk94RAscXD7J4vsbGLeJa5eLHCgQZEdeRicCj9KxIiSVkfyvl3pdEV9jQK017DXb1FA8SSc2aaREwodRskKr7PJTKWd6NjHXhgUTKissxbsL5w4+N3z54hlzxD/peqgB2/of64f3Bjww8td+Y94sYwREycxTP36kwKabEawa8sd7t4A6fH3PLfsLwWPKL/E7XASKb9JtJgd4d4WkLFt+f/2UbWyFDf7rNZD5vKJ3m5eVzRwV8=
+
+env:
+  - name: SERVER_PORT
+    value: "8082"
+  - name: SPRING_DATASOURCE_URL
+    value: jdbc:postgresql://postgres-postgresql:5432/postgres?currentSchema=orders
+  - name: SPRING_DATASOURCE_USERNAME
+    value: orders
+  - name: SPRING_DATASOURCE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: order-secrets
+        key: postgres-password
+  - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+    value: update
+  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+    value: kafka:9092
+  - name: SPRING_RABBITMQ_HOST
+    value: rabbitmq
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ''
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
