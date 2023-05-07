@@ -1,0 +1,92 @@
+# Default values for backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: ghcr.io/lucido-simon/gateway
+  pullPolicy: Always
+  tag: latest
+
+fullnameOverride: 'gateway'
+
+containerPort: 8080
+
+env:
+  - name: SERVER_PORT
+    value: "8080"
+  - name: SPRING_RABBITMQ_HOST
+    value: rabbitmq
+  - name: GRPC_CLIENT_CATALOG_SERVICE_ADDRESS
+    value: dns:///catalog:80
+  - name: GRPC_CLIENT_CART_SERVICE_ADDRESS
+    value: dns:///cart:80
+  - name: GRPC_CLIENT_INVENTORY_SERVICE_ADDRESS
+    value: dns:///inventory:80
+  - name: ORDER_SERVICE_BASEURL
+    value: http://order:80
+  - name: PAYMENT_SERVICE_BASEURL
+    value: http://payment:80
+  - name: SHIPPING_SERVICE_BASEURL
+    value: http://shipping:80
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: NodePort
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ''
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
