@@ -1,0 +1,93 @@
+# Default values for backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: ghcr.io/lucido-simon/inventory
+  pullPolicy: Always
+  tag: latest
+
+fullnameOverride: 'inventory'
+
+containerPort: 8084
+
+sealedSecrets:
+  postgres:
+    password: AgCVEA/+AZ5vswpnvlDdc8ZIvh0s0RS+dYtsQ6YzdzS03lPOY+lPSYzIdxWfwjiftYj24ooUXFDON/XWpFjaZo/4FJZseSIRHxPu5oNjlgAVNYpdoaahhkmCbpYNMnA14AMQp7cM2Oi/n6pEmVizfKEqsFdvbVLPKmnT9ruWLIRpozVJ6Zz4MGGHEsa+y/YQtdTZCQBMD+b0TiN/opwkSSniKhKbW4WXBXc2JeXwRKYGHLqAM9BLJJU7LIpb7LCqipids5bj7q3mEW8n3qglWCJnMKg3kDfJn/M9wbfz7bEhnbuGQ8c4I+ku2c47a6WTyz9Z2c/ov+oEgup8kCHH0HzMDAuKOLkT5JfDCf5xrCkkCptTx5l3Q34uqOc/EhpqMTkPXaVwh2ohM6qBnJaaZ1rDvhcKT/akthETFEa/5Ub3JNhZKfJDkj12BRq/l108q8tbm9DMS+dDnfLmC5B2phpAoMW/Ll8BP+7v84fXVnAY1Od5QcG2MDbOtb+OE3fJTuklqpNjis9IgnFBsMP2C0oYvRhDSIT09rh03HvHzVZvVmFbbEBl2V8jCdNNIrQ91bjXI0Xo+/kx0XQkh1ZftrH0XZL/lHq5Yff2cpJvlNALQJ3qFVXoOwOUhNsWwLjHL4ANVo7Fk8ruxR5wZPKXFk30o27ObgecSYdemcNBDQLhVQvFLVlvTnxVXDX7H3lxjWGmqX3fBcbPgX4=
+
+env:
+  - name: GRPC_SERVER_PORT
+    value: "8084"
+  - name: SPRING_DATASOURCE_URL
+    value: jdbc:postgresql://postgres-postgresql:5432/postgres?currentSchema=inventory
+  - name: SPRING_DATASOURCE_USERNAME
+    value: inventory
+  - name: SPRING_DATASOURCE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: inventory-secrets
+        key: postgres-password
+  - name: SPRING_RABBITMQ_HOST
+    value: rabbitmq
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ''
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
